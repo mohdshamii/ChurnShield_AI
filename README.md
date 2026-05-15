@@ -297,8 +297,8 @@ graph TD
 
 **Lead Developer:** Mohd Shami
 
-- LinkedIn: [linkedin.com/in/mohd-shami-792133276](https://www.linkedin.com/in/mohd-shami-792133276)
-- Email: [shamimohd367@gmail.com](mailto:shamimohd367@gmail.com)
+- LinkedIn: [linkedin.com/in/codexshami](https://www.linkedin.com/in/codexshami)
+- Email: [codexshami@gmail.com](mailto:codexshami@gmail.com)
 - GitHub Discussions: [ChurnShield AI Community](https://github.com/codewithshami/ChurnShield_AI/discussions)
 
 ---
