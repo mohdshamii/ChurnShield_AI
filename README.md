@@ -134,9 +134,6 @@ df['PaymentRisk'] = df['PaymentMethod_Electronic check'].astype(int) * df['Contr
 df['HighCostLongTenure'] = ((df['MonthlyCharges'] > df['MonthlyCharges'].quantile(0.75)) &
                            (df['tenure'] > df['tenure'].median())).astype(int)
 
-#!/bin/bash
-
-cat << 'README_EOF' > README.md
 # ChurnShield AI
 
 These engineered features capture non-linear interactions that single variables cannot express, contributing significantly to model performance.
@@ -151,7 +148,6 @@ These engineered features capture non-linear interactions that single variables 
 
 ## Setup Instructions
 
-\`\`\`bash
 # Clone the repository
 git clone https://github.com/codewithshami/ChurnShield_AI.git
 cd ChurnShield_AI
@@ -166,7 +162,7 @@ pip install -r requirements.txt
 
 # Launch the dashboard
 streamlit run app.py
-\`\`\`
+`
 
 Access the dashboard at http://localhost:8501 in your web browser.
 
@@ -174,16 +170,16 @@ Access the dashboard at http://localhost:8501 in your web browser.
 
 For automated deployment, execute the included setup script:
 
-\`\`\`bash
+
 chmod +x setup.sh
 ./setup.sh
-\`\`\`
+
 
 This script handles environment creation, dependency installation, dataset preparation, model training, and dashboard launch in a single execution.
 
 ## Repository Structure
 
-\`\`\`text
+
 ChurnShield_AI/
 ├── app.py
 ├── train.py
@@ -207,7 +203,7 @@ ChurnShield_AI/
     ├── preprocessing.py
     ├── modeling.py
     └── utils.py
-\`\`\`
+
 
 ## Usage Guide
 
@@ -235,9 +231,8 @@ ChurnShield_AI/
 
 The training pipeline supports incremental retraining as new churn data becomes available:
 
-\`\`\`bash
 python train.py --data path/to/updated_data.csv --output models/
-\`\`\`
+
 
 Optional flags include:
 
@@ -249,13 +244,13 @@ Optional flags include:
 
 For production deployment, the following architecture is recommended:
 
-\`\`\`text
+
 [Load Balancer] -> [Streamlit Server (Gunicorn)] -> [Model API (FastAPI)]
                                                           |
                                                      [Redis Cache]
                                                           |
                                                   [Model Registry]
-\`\`\`
+
 
 The model serving layer exposes a REST API endpoint accepting JSON payloads and returning predictions with sub-100ms latency when paired with Redis caching for frequent customer profiles.
 
@@ -271,6 +266,5 @@ This project is licensed under the MIT License. See the LICENSE file for details
   <em>Built for data-driven retention teams who demand both accuracy and interpretability.</em>
 </p>
 
-README_EOF
 
-echo "README.md generated successfully."
+
