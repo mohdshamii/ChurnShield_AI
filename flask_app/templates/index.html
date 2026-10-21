@@ -1,0 +1,305 @@
+{% extends "base.html" %}
+
+{% block title %}Executive Intelligence Dashboard | ChurnShield AI{% endblock %}
+
+{% block header_title %}
+  <i class="fa-solid fa-chart-line" style="color: var(--primary);"></i> Executive Intelligence Dashboard
+{% endblock %}
+
+{% block content %}
+<!-- KPI Summary Cards -->
+<div class="kpi-grid">
+  <div class="kpi-card">
+    <div class="kpi-label">Analyzed Customers</div>
+    <div class="kpi-value">{{ total_customers }}</div>
+    <div class="kpi-subtext">
+      <i class="fa-solid fa-users" style="color: var(--primary);"></i> Active Telco Dataset
+    </div>
+  </div>
+
+  <div class="kpi-card">
+    <div class="kpi-label">Observed Churn Rate</div>
+    <div class="kpi-value" style="color: #ffaa00;">{{ churn_rate }}%</div>
+    <div class="kpi-subtext">
+      <i class="fa-solid fa-arrow-trend-up" style="color: #ffaa00;"></i> 1,869 Churned Customers
+    </div>
+  </div>
+
+  <div class="kpi-card">
+    <div class="kpi-label">Annual Revenue At Risk</div>
+    <div class="kpi-value" style="color: var(--danger);">{{ annual_rev_at_risk }}</div>
+    <div class="kpi-subtext">
+      <i class="fa-solid fa-triangle-exclamation" style="color: var(--danger);"></i> Churning Base Run-Rate
+    </div>
+  </div>
+
+  <div class="kpi-card">
+    <div class="kpi-label">Avg Retention Campaign ROI</div>
+    <div class="kpi-value" style="color: var(--primary);">+340%</div>
+    <div class="kpi-subtext">
+      <i class="fa-solid fa-shield-check" style="color: var(--primary);"></i> CLV Preserved vs Spend
+    </div>
+  </div>
+</div>
+
+<!-- Charts Row 1: Contract Analysis & Internet Service -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: 24px; margin-bottom: 28px;">
+  <div class="card-panel">
+    <div class="card-header-row">
+      <div>
+        <div class="card-title">
+          <i class="fa-solid fa-file-contract" style="color: var(--primary);"></i> Churn Rate by Contract Type
+        </div>
+        <div class="card-subtitle">Month-to-month contracts exhibit nearly 4x the churn velocity of annual commitments.</div>
+      </div>
+    </div>
+    <div style="height: 280px; position: relative;">
+      <canvas id="contractChart"></canvas>
+    </div>
+  </div>
+
+  <div class="card-panel">
+    <div class="card-header-row">
+      <div>
+        <div class="card-title">
+          <i class="fa-solid fa-wifi" style="color: var(--secondary);"></i> Churn Rate by Internet Service
+        </div>
+        <div class="card-subtitle">Fiber optic customers show elevated churn due to pricing sensitivity and support needs.</div>
+      </div>
+    </div>
+    <div style="height: 280px; position: relative;">
+      <canvas id="internetChart"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- Charts Row 2: Tenure Cohort Risk & Payment Method Risk -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: 24px; margin-bottom: 28px;">
+  <div class="card-panel">
+    <div class="card-header-row">
+      <div>
+        <div class="card-title">
+          <i class="fa-solid fa-hourglass-half" style="color: #ffaa00;"></i> Churn Risk by Customer Tenure Cohort
+        </div>
+        <div class="card-subtitle">Critical churn vulnerability occurs within the first 12 months of customer acquisition.</div>
+      </div>
+    </div>
+    <div style="height: 280px; position: relative;">
+      <canvas id="tenureChart"></canvas>
+    </div>
+  </div>
+
+  <div class="card-panel">
+    <div class="card-header-row">
+      <div>
+        <div class="card-title">
+          <i class="fa-solid fa-credit-card" style="color: var(--info);"></i> Payment Method Risk Profile
+        </div>
+        <div class="card-subtitle">Automated bank and credit card billing dramatically reduces involuntary & friction churn.</div>
+      </div>
+    </div>
+    <div style="height: 280px; position: relative;">
+      <canvas id="paymentChart"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- Recent Audits Table & System Capabilities -->
+<div class="card-panel">
+  <div class="card-header-row">
+    <div>
+      <div class="card-title">
+        <i class="fa-solid fa-clock-rotate-left" style="color: var(--primary);"></i> Recent Real-Time Customer Audits
+      </div>
+      <div class="card-subtitle">Predictions logged directly into the SQLite persistence layer.</div>
+    </div>
+    <a href="{{ url_for('main.history_view') }}" class="btn btn-secondary btn-sm">
+      View All Audits ({{ db_stats.total_predictions }})
+    </a>
+  </div>
+
+  <div class="table-responsive">
+    <table class="custom-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Customer Identifier</th>
+          <th>Churn Probability</th>
+          <th>Risk Tier</th>
+          <th>Tenure</th>
+          <th>Monthly Bill</th>
+          <th>Contract</th>
+          <th>Timestamp</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if recent_preds %}
+          {% for p in recent_preds %}
+            <tr>
+              <td>#{{ p.id }}</td>
+              <td><strong>{{ p.customer_id }}</strong></td>
+              <td>
+                <span style="font-family: 'JetBrains Mono', monospace; font-weight: 700; color: {% if p.churn_prob >= 65 %}var(--danger){% elif p.churn_prob >= 35 %}var(--warning){% else %}var(--primary){% endif %};">
+                  {{ p.churn_prob }}%
+                </span>
+              </td>
+              <td>
+                <span class="badge {% if p.risk_level == 'HIGH' %}badge-danger{% elif p.risk_level == 'MEDIUM' %}badge-warning{% else %}badge-success{% endif %}">
+                  {{ p.risk_level }}
+                </span>
+              </td>
+              <td>{{ p.tenure }} mo</td>
+              <td>${{ p.monthly_charges }}</td>
+              <td>{{ p.contract }}</td>
+              <td style="color: var(--text-dim); font-size: 0.8rem;">{{ p.timestamp }}</td>
+            </tr>
+          {% endfor %}
+        {% else %}
+          <tr>
+            <td colspan="8" style="text-align: center; color: var(--text-dim); padding: 30px;">
+              No recent predictions logged yet. Try testing a customer profile in the Customer Predictor tab!
+            </td>
+          </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  // Chart 1: Contract Analysis
+  const contractCtx = document.getElementById('contractChart').getContext('2d');
+  const contractData = {{ contract_data|tojson }};
+  new Chart(contractCtx, {
+    type: 'bar',
+    data: {
+      labels: contractData.map(d => d.contract),
+      datasets: [{
+        label: 'Churn Rate (%)',
+        data: contractData.map(d => d.rate),
+        backgroundColor: ['#ff3d57', '#0095ff', '#00ffaa'],
+        borderRadius: 8,
+        borderWidth: 0
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: function(ctx) { return ` Churn Rate: ${ctx.parsed.y}%`; }
+          }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          grid: { color: 'rgba(255, 255, 255, 0.05)' },
+          ticks: { color: '#94a3b8', callback: v => v + '%' }
+        },
+        x: {
+          grid: { display: false },
+          ticks: { color: '#f1f5f9' }
+        }
+      }
+    }
+  });
+
+  // Chart 2: Internet Service
+  const internetCtx = document.getElementById('internetChart').getContext('2d');
+  const internetData = {{ internet_data|tojson }};
+  new Chart(internetCtx, {
+    type: 'bar',
+    data: {
+      labels: internetData.map(d => d.service),
+      datasets: [{
+        label: 'Churn Rate (%)',
+        data: internetData.map(d => d.rate),
+        backgroundColor: ['#ff3d57', '#0095ff', '#00ffaa'],
+        borderRadius: 8
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: {
+          beginAtZero: true,
+          grid: { color: 'rgba(255, 255, 255, 0.05)' },
+          ticks: { color: '#94a3b8', callback: v => v + '%' }
+        },
+        x: {
+          grid: { display: false },
+          ticks: { color: '#f1f5f9' }
+        }
+      }
+    }
+  });
+
+  // Chart 3: Tenure Cohorts
+  const tenureCtx = document.getElementById('tenureChart').getContext('2d');
+  const tenureData = {{ tenure_cohorts|tojson }};
+  new Chart(tenureCtx, {
+    type: 'line',
+    data: {
+      labels: tenureData.map(d => d.cohort),
+      datasets: [{
+        label: 'Churn Risk (%)',
+        data: tenureData.map(d => d.churn_rate),
+        borderColor: '#ffaa00',
+        backgroundColor: 'rgba(255, 170, 0, 0.1)',
+        tension: 0.4,
+        fill: true,
+        pointBackgroundColor: '#ffaa00',
+        pointRadius: 6
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: {
+          beginAtZero: true,
+          grid: { color: 'rgba(255, 255, 255, 0.05)' },
+          ticks: { color: '#94a3b8', callback: v => v + '%' }
+        },
+        x: {
+          grid: { display: false },
+          ticks: { color: '#f1f5f9' }
+        }
+      }
+    }
+  });
+
+  // Chart 4: Payment Methods
+  const paymentCtx = document.getElementById('paymentChart').getContext('2d');
+  const paymentData = {{ payment_data|tojson }};
+  new Chart(paymentCtx, {
+    type: 'doughnut',
+    data: {
+      labels: paymentData.map(d => d.method),
+      datasets: [{
+        data: paymentData.map(d => d.rate),
+        backgroundColor: ['#ff3d57', '#ffaa00', '#0095ff', '#00ffaa'],
+        borderWidth: 0
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'right',
+          labels: { color: '#f1f5f9', font: { size: 11 } }
+        }
+      }
+    }
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block title %}Batch CSV Intelligence Engine | ChurnShield AI{% endblock %}
+
+{% block header_title %}
+  <i class="fa-solid fa-layer-group" style="color: var(--primary);"></i> High-Speed Batch CSV Prediction Engine
+{% endblock %}
+
+{% block content %}
+<!-- Upload Dropzone & Sample Controls -->
+<div class="card-panel" style="margin-bottom: 28px;">
+  <div class="card-header-row">
+    <div>
+      <div class="card-title">
+        <i class="fa-solid fa-cloud-arrow-up" style="color: var(--primary);"></i> Upload Customer Batch Dataset
+      </div>
+      <div class="card-subtitle">Upload any standard customer CSV or run our bundled sample batch of Telco accounts.</div>
+    </div>
+    <a href="{{ url_for('main.download_sample_csv') }}" class="btn btn-secondary btn-sm">
+      <i class="fa-solid fa-download"></i> Download Sample CSV
+    </a>
+  </div>
+
+  <form action="{{ url_for('main.batch_predict') }}" method="POST" enctype="multipart/form-data">
+    <div style="border: 2px dashed var(--border-glass); border-radius: 12px; padding: 36px 20px; text-align: center; background: rgba(0,0,0,0.2); margin-bottom: 20px;">
+      <i class="fa-solid fa-file-csv" style="font-size: 3rem; color: var(--primary); margin-bottom: 12px;"></i>
+      <h4 style="color: #fff; margin-bottom: 6px;">Select or Drag & Drop Customer CSV</h4>
+      <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 16px;">
+        Accepts raw customer attributes matching standard Telco schema.
+      </p>
+      <input type="file" name="file" accept=".csv" class="form-control" style="max-width: 360px; margin: 0 auto;">
+    </div>
+
+    <div style="display: flex; gap: 14px; justify-content: flex-end; flex-wrap: wrap;">
+      <button type="submit" name="use_sample" value="1" class="btn btn-secondary">
+        <i class="fa-solid fa-bolt"></i> Run Demo Batch (120 Accounts)
+      </button>
+      <button type="submit" class="btn btn-primary">
+        <i class="fa-solid fa-gears"></i> Process Uploaded CSV
+      </button>
+    </div>
+  </form>
+</div>
+
+{% if summary %}
+<!-- Batch Execution Summary Metrics -->
+<div class="kpi-grid">
+  <div class="kpi-card">
+    <div class="kpi-label">Accounts Processed</div>
+    <div class="kpi-value">{{ summary.total_records }}</div>
+    <div class="kpi-subtext">{{ summary.filename }}</div>
+  </div>
+
+  <div class="kpi-card">
+    <div class="kpi-label">Critical High Risk</div>
+    <div class="kpi-value" style="color: var(--danger);">{{ summary.high_risk_count }}</div>
+    <div class="kpi-subtext">Immediate intervention needed</div>
+  </div>
+
+  <div class="kpi-card">
+    <div class="kpi-label">Proactive Medium Risk</div>
+    <div class="kpi-value" style="color: var(--warning);">{{ summary.medium_risk_count }}</div>
+    <div class="kpi-subtext">Nurture sequence triggered</div>
+  </div>
+
+  <div class="kpi-card">
+    <div class="kpi-label">Total Revenue At Risk</div>
+    <div class="kpi-value" style="color: var(--primary);">{{ summary.total_rev_at_risk }}</div>
+    <div class="kpi-subtext">Annual run-rate exposure</div>
+  </div>
+</div>
+
+<!-- Detailed Accounts Risk Matrix -->
+<div class="card-panel">
+  <div class="card-header-row">
+    <div>
+      <div class="card-title">
+        <i class="fa-solid fa-list-check" style="color: var(--primary);"></i> Prioritized Retention Risk Matrix
+      </div>
+      <div class="card-subtitle">Customers ranked by Churn Probability and Revenue Exposure.</div>
+    </div>
+  </div>
+
+  <div class="table-responsive">
+    <table class="custom-table">
+      <thead>
+        <tr>
+          <th>Customer ID</th>
+          <th>Churn Probability</th>
+          <th>Risk Tier</th>
+          <th>Monthly Charges</th>
+          <th>Contract</th>
+          <th>Revenue Exposure</th>
+          <th>Targeted Strategy</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in records %}
+          <tr>
+            <td><strong>{{ r.customer_id }}</strong></td>
+            <td>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-family: 'JetBrains Mono', monospace; font-weight: 700; color: {{ r.color }};">
+                  {{ r.churn_prob }}%
+                </span>
+                <div style="width: 50px; height: 6px; background: rgba(255,255,255,0.08); border-radius: 3px; overflow: hidden;">
+                  <div style="width: {{ r.churn_prob }}%; height: 100%; background: {{ r.color }};"></div>
+                </div>
+              </div>
+            </td>
+            <td>
+              <span class="badge {{ r.badge_class }}">{{ r.risk_level }}</span>
+            </td>
+            <td>${{ r.monthly_charges }}</td>
+            <td>{{ r.contract }}</td>
+            <td style="color: #fff; font-weight: 600;">${{ r.revenue_at_risk }}</td>
+            <td style="font-size: 0.82rem; color: #cbd5e1;">{{ r.recommended_action }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

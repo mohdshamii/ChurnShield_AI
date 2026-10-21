@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block title %}Audit History & Database Records | ChurnShield AI{% endblock %}
+
+{% block header_title %}
+  <i class="fa-solid fa-clock-rotate-left" style="color: var(--primary);"></i> Audit History & Database Persistence Records
+{% endblock %}
+
+{% block content %}
+<!-- History Overview KPIs -->
+<div class="kpi-grid">
+  <div class="kpi-card">
+    <div class="kpi-label">Logged Audits</div>
+    <div class="kpi-value">{{ stats.total_predictions }}</div>
+    <div class="kpi-subtext">Stored in churn_prediction.db</div>
+  </div>
+
+  <div class="kpi-card">
+    <div class="kpi-label">High-Risk Accounts</div>
+    <div class="kpi-value" style="color: var(--danger);">{{ stats.high_risk_count }}</div>
+    <div class="kpi-subtext">Critical priority interventions</div>
+  </div>
+
+  <div class="kpi-card">
+    <div class="kpi-label">Medium-Risk Accounts</div>
+    <div class="kpi-value" style="color: var(--warning);">{{ stats.medium_risk_count }}</div>
+    <div class="kpi-subtext">Nurture pipeline accounts</div>
+  </div>
+
+  <div class="kpi-card">
+    <div class="kpi-label">Average Risk Score</div>
+    <div class="kpi-value" style="color: var(--primary);">{{ stats.avg_churn_prob }}%</div>
+    <div class="kpi-subtext">Portfolio-wide risk index</div>
+  </div>
+</div>
+
+<!-- History Table Panel -->
+<div class="card-panel">
+  <div class="card-header-row">
+    <div>
+      <div class="card-title">
+        <i class="fa-solid fa-database" style="color: var(--primary);"></i> SQLite Prediction Logs
+      </div>
+      <div class="card-subtitle">Complete chronological history of evaluated customers with specialist notes.</div>
+    </div>
+    <a href="{{ url_for('main.predict') }}" class="btn btn-primary btn-sm">
+      <i class="fa-solid fa-plus"></i> New Prediction
+    </a>
+  </div>
+
+  <div class="table-responsive">
+    <table class="custom-table" id="history-table">
+      <thead>
+        <tr>
+          <th>Record ID</th>
+          <th>Customer ID</th>
+          <th>Churn Probability</th>
+          <th>Risk Tier</th>
+          <th>Tenure</th>
+          <th>Monthly Bill</th>
+          <th>Contract</th>
+          <th>Specialist Notes</th>
+          <th>Logged At</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if predictions %}
+          {% for p in predictions %}
+            <tr id="pred-row-{{ p.id }}">
+              <td>#{{ p.id }}</td>
+              <td><strong>{{ p.customer_id }}</strong></td>
+              <td>
+                <span style="font-family: 'JetBrains Mono', monospace; font-weight: 700; color: {% if p.churn_prob >= 65 %}var(--danger){% elif p.churn_prob >= 35 %}var(--warning){% else %}var(--primary){% endif %};">
+                  {{ p.churn_prob }}%
+                </span>
+              </td>
+              <td>
+                <span class="badge {% if p.risk_level == 'HIGH' %}badge-danger{% elif p.risk_level == 'MEDIUM' %}badge-warning{% else %}badge-success{% endif %}">
+                  {{ p.risk_level }}
+                </span>
+              </td>
+              <td>{{ p.tenure }} mo</td>
+              <td>${{ p.monthly_charges }}</td>
+              <td>{{ p.contract }}</td>
+              <td style="color: #cbd5e1; font-size: 0.85rem; max-width: 220px;">
+                {{ p.notes or '<span style="color: var(--text-dim);">No notes recorded</span>'|safe }}
+              </td>
+              <td style="color: var(--text-dim); font-size: 0.8rem;">{{ p.timestamp }}</td>
+              <td>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="deleteRecord({{ p.id }})" style="padding: 4px 10px; color: var(--danger);">
+                  <i class="fa-solid fa-trash-can"></i>
+                </button>
+              </td>
+            </tr>
+          {% endfor %}
+        {% else %}
+          <tr>
+            <td colspan="10" style="text-align: center; color: var(--text-dim); padding: 40px;">
+              <i class="fa-solid fa-box-open" style="font-size: 2rem; margin-bottom: 10px; display: block;"></i>
+              No predictions saved yet. Visit the <strong>Customer Predictor</strong> to evaluate a profile and save it to SQLite!
+            </td>
+          </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  async function deleteRecord(id) {
+    if (!confirm(`Are you sure you want to delete prediction record #${id}?`)) return;
+    try {
+      const res = await fetch(`/api/delete-prediction/${id}`, { method: 'POST' });
+      const data = await res.json();
+      if (data.success) {
+        const row = document.getElementById(`pred-row-${id}`);
+        if (row) row.remove();
+        showToast(`Record #${id} deleted successfully`, "info");
+      }
+    } catch (err) {
+      console.error(err);
+      showToast("Error deleting record", "danger");
+    }
+  }
+</script>
+{% endblock %}

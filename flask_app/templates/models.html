@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+
+{% block title %}ML Models & Benchmark Center | ChurnShield AI{% endblock %}
+
+{% block header_title %}
+  <i class="fa-solid fa-microchip" style="color: var(--primary);"></i> Machine Learning Benchmark & Model Evaluation
+{% endblock %}
+
+{% block content %}
+<!-- Executive Model Comparison Matrix -->
+<div class="card-panel" style="margin-bottom: 28px;">
+  <div class="card-header-row">
+    <div>
+      <div class="card-title">
+        <i class="fa-solid fa-trophy" style="color: #ffaa00;"></i> Production Model Benchmark Matrix
+      </div>
+      <div class="card-subtitle">
+        Trained with stratified 80/20 train-test splits and 5-fold cross-validation. Best overall: <strong>Soft Voting Ensemble</strong>.
+      </div>
+    </div>
+    <span class="badge badge-success">PRODUCTION CERTIFIED</span>
+  </div>
+
+  <div class="table-responsive">
+    <table class="custom-table">
+      <thead>
+        <tr>
+          <th>Model Architecture</th>
+          <th>Accuracy</th>
+          <th>Recall (Churn)</th>
+          <th>Precision</th>
+          <th>F1-Score</th>
+          <th>ROC-AUC</th>
+          <th>5-Fold CV AUC</th>
+          <th>Log Loss</th>
+          <th>Latency / Train</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for name, m in metrics.items() %}
+          <tr {% if name == 'Voting Ensemble' %}style="background: rgba(0, 255, 170, 0.05); font-weight: 600;"{% endif %}>
+            <td>
+              <strong>{{ name }}</strong>
+              {% if name == 'Voting Ensemble' %}
+                <span class="badge badge-success" style="font-size: 0.65rem; margin-left: 6px;">Champion</span>
+              {% elif name == 'XGBoost' %}
+                <span class="badge badge-danger" style="font-size: 0.65rem; margin-left: 6px;">High Recall</span>
+              {% endif %}
+            </td>
+            <td>{{ m.accuracy }}%</td>
+            <td style="color: var(--primary); font-weight: 700;">{{ m.recall }}%</td>
+            <td>{{ m.precision }}%</td>
+            <td>{{ m.f1_score }}%</td>
+            <td>
+              <span style="font-family: 'JetBrains Mono', monospace; font-weight: 700; color: #fff;">
+                {{ m.roc_auc }}
+              </span>
+            </td>
+            <td>{{ m.cv_auc_mean }} &plusmn; {{ m.cv_auc_std }}</td>
+            <td>{{ m.log_loss }}</td>
+            <td style="color: var(--text-dim);">{{ m.training_time_sec }}s</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Grid: Confusion Matrices & Global Feature Importance -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: 24px;">
+  
+  <!-- Confusion Matrix Visualizer -->
+  <div class="card-panel">
+    <div class="card-header-row">
+      <div>
+        <div class="card-title">
+          <i class="fa-solid fa-table-cells" style="color: var(--primary);"></i> Confusion Matrix Analysis
+        </div>
+        <div class="card-subtitle">Ensemble prioritizes High Churn Recall (capturing 80%+ of churning accounts).</div>
+      </div>
+    </div>
+
+    <div style="display: flex; justify-content: center; align-items: center; padding: 20px 0;">
+      <div style="display: grid; grid-template-columns: 140px 140px; gap: 12px; text-align: center;">
+        
+        <!-- True Negative -->
+        <div style="background: rgba(0, 149, 255, 0.15); border: 1px solid var(--secondary); padding: 18px 12px; border-radius: 8px;">
+          <div style="font-size: 0.72rem; color: #94a3b8; text-transform: uppercase;">True Negative (Retained)</div>
+          <div style="font-size: 1.8rem; font-weight: 800; color: #fff;">
+            {{ metrics['Voting Ensemble']['confusion_matrix'][0][0] }}
+          </div>
+          <div style="font-size: 0.75rem; color: var(--secondary);">Correct Loyal</div>
+        </div>
+
+        <!-- False Positive -->
+        <div style="background: rgba(255, 170, 0, 0.15); border: 1px solid var(--warning); padding: 18px 12px; border-radius: 8px;">
+          <div style="font-size: 0.72rem; color: #94a3b8; text-transform: uppercase;">False Positive (False Alarm)</div>
+          <div style="font-size: 1.8rem; font-weight: 800; color: #fff;">
+            {{ metrics['Voting Ensemble']['confusion_matrix'][0][1] }}
+          </div>
+          <div style="font-size: 0.75rem; color: var(--warning);">Safe Inaccurate</div>
+        </div>
+
+        <!-- False Negative -->
+        <div style="background: rgba(255, 61, 87, 0.15); border: 1px solid var(--danger); padding: 18px 12px; border-radius: 8px;">
+          <div style="font-size: 0.72rem; color: #94a3b8; text-transform: uppercase;">False Negative (Missed Churn)</div>
+          <div style="font-size: 1.8rem; font-weight: 800; color: var(--danger);">
+            {{ metrics['Voting Ensemble']['confusion_matrix'][1][0] }}
+          </div>
+          <div style="font-size: 0.75rem; color: var(--danger);">Critical Risk</div>
+        </div>
+
+        <!-- True Positive -->
+        <div style="background: rgba(0, 255, 170, 0.15); border: 1px solid var(--primary); padding: 18px 12px; border-radius: 8px;">
+          <div style="font-size: 0.72rem; color: #94a3b8; text-transform: uppercase;">True Positive (Caught Churn)</div>
+          <div style="font-size: 1.8rem; font-weight: 800; color: var(--primary);">
+            {{ metrics['Voting Ensemble']['confusion_matrix'][1][1] }}
+          </div>
+          <div style="font-size: 0.75rem; color: var(--primary);">Saved Account</div>
+        </div>
+
+      </div>
+    </div>
+
+    <div style="background: rgba(0,0,0,0.3); padding: 12px 16px; border-radius: 8px; font-size: 0.82rem; color: #94a3b8;">
+      <i class="fa-solid fa-circle-info" style="color: var(--primary); margin-right: 6px;"></i>
+      <strong>Business Impact Rationale:</strong> In telecom customer retention, the business penalty of a False Negative (lost customer = ~$800 ARR) is ~10x greater than a False Positive (cost of email/discount = ~$50). Hence, high recall is prioritized.
+    </div>
+  </div>
+
+  <!-- Global Feature Importance -->
+  <div class="card-panel">
+    <div class="card-header-row">
+      <div>
+        <div class="card-title">
+          <i class="fa-solid fa-chart-simple" style="color: var(--secondary);"></i> Global Feature Importance (Gain)
+        </div>
+        <div class="card-subtitle">Top signals leveraged by Random Forest and XGBoost.</div>
+      </div>
+    </div>
+
+    <div style="height: 320px; position: relative;">
+      <canvas id="featureImportanceChart"></canvas>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  const featCtx = document.getElementById('featureImportanceChart').getContext('2d');
+  const featData = {{ top_features|tojson }};
+
+  new Chart(featCtx, {
+    type: 'bar',
+    data: {
+      labels: featData.map(d => d[0].replace('Contract_', '').replace('InternetService_', '').replace('PaymentMethod_', '')),
+      datasets: [{
+        label: 'Relative Importance Score',
+        data: featData.map(d => d[1]),
+        backgroundColor: 'rgba(0, 255, 170, 0.7)',
+        borderRadius: 6
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: {
+          grid: { color: 'rgba(255, 255, 255, 0.05)' },
+          ticks: { color: '#94a3b8' }
+        },
+        y: {
+          grid: { display: false },
+          ticks: { color: '#f1f5f9', font: { size: 10 } }
+        }
+      }
+    }
+  });
+</script>
+{% endblock %}

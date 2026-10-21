@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+
+{% block title %}Retention Strategy & CLV ROI Simulator | ChurnShield AI{% endblock %}
+
+{% block header_title %}
+  <i class="fa-solid fa-hand-holding-dollar" style="color: var(--primary);"></i> Customer Retention & Lifetime Value (CLV) ROI Hub
+{% endblock %}
+
+{% block content %}
+<!-- Interactive Financial ROI Simulator -->
+<div class="card-panel" style="margin-bottom: 28px;">
+  <div class="card-header-row">
+    <div>
+      <div class="card-title">
+        <i class="fa-solid fa-calculator" style="color: var(--primary);"></i> Interactive Retention Campaign Financial Simulator
+      </div>
+      <div class="card-subtitle">Model the financial return on investment of targeted retention interventions.</div>
+    </div>
+    <span class="badge badge-success">FINANCIAL MODEL</span>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px;">
+    <!-- Inputs Column -->
+    <div style="background: rgba(15, 23, 42, 0.7); padding: 20px; border-radius: 12px; border: 1px solid var(--border-subtle);">
+      <h4 style="color: #fff; margin-bottom: 16px; font-size: 1rem;">Simulation Parameters</h4>
+      
+      <div class="form-group">
+        <label class="form-label">Target Cohort Size (At-Risk Customers): <span id="val-cohort" style="color: var(--primary); font-weight: 700;">500</span></label>
+        <input type="range" id="input-cohort" class="form-control" min="50" max="2000" step="25" value="500">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Average Monthly ARPU ($): <span id="val-arpu" style="color: var(--primary); font-weight: 700;">$75</span></label>
+        <input type="range" id="input-arpu" class="form-control" min="20" max="150" step="5" value="75">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Retention Incentive Spend ($ per customer): <span id="val-spend" style="color: var(--primary); font-weight: 700;">$60</span></label>
+        <input type="range" id="input-spend" class="form-control" min="10" max="250" step="5" value="60">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Intervention Success Rate (%): <span id="val-success" style="color: var(--primary); font-weight: 700;">60%</span></label>
+        <input type="range" id="input-success" class="form-control" min="20" max="90" step="5" value="60">
+      </div>
+    </div>
+
+    <!-- Outputs Column -->
+    <div style="display: flex; flex-direction: column; justify-content: space-between; gap: 14px;">
+      <div class="kpi-grid" style="margin-bottom: 0;">
+        <div class="kpi-card" style="padding: 16px 20px;">
+          <div class="kpi-label">Campaign Budget</div>
+          <div class="kpi-value" id="res-budget" style="font-size: 1.6rem; color: #fff;">$30,000</div>
+          <div class="kpi-subtext">Total incentive spend</div>
+        </div>
+
+        <div class="kpi-card" style="padding: 16px 20px;">
+          <div class="kpi-label">Accounts Saved</div>
+          <div class="kpi-value" id="res-saved-count" style="font-size: 1.6rem; color: var(--secondary);">300</div>
+          <div class="kpi-subtext">Retained subscribers</div>
+        </div>
+
+        <div class="kpi-card" style="padding: 16px 20px;">
+          <div class="kpi-label">Gross Revenue Preserved</div>
+          <div class="kpi-value" id="res-gross" style="font-size: 1.6rem; color: var(--primary);">$270,000</div>
+          <div class="kpi-subtext">Annualized recurring run-rate</div>
+        </div>
+
+        <div class="kpi-card" style="padding: 16px 20px;">
+          <div class="kpi-label">Net Campaign ROI</div>
+          <div class="kpi-value" id="res-roi" style="font-size: 1.6rem; color: #00ffaa;">+800%</div>
+          <div class="kpi-subtext">Net Value / Campaign Cost</div>
+        </div>
+      </div>
+
+      <div style="background: rgba(0, 255, 170, 0.08); border: 1px solid var(--border-glass); border-radius: 10px; padding: 14px 18px; font-size: 0.85rem; color: #cbd5e1;">
+        <i class="fa-solid fa-chart-line" style="color: var(--primary); margin-right: 6px;"></i>
+        <strong>Key Takeaway:</strong> Proactive AI-driven retention yields immense economic return compared to new acquisition (average CAC is 5x-7x higher than retention incentive cost).
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Risk Tier Strategic Playbooks -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px; margin-bottom: 28px;">
+  <!-- High Risk Playbook -->
+  <div class="card-panel" style="border-top: 3px solid var(--danger);">
+    <div class="card-header-row">
+      <div class="card-title">
+        <i class="fa-solid fa-triangle-exclamation" style="color: var(--danger);"></i> High-Risk Protocol
+      </div>
+      <span class="badge badge-danger">PROB &gt; 65%</span>
+    </div>
+    <ul style="list-style: none; padding-left: 0; font-size: 0.86rem; color: #cbd5e1; display: flex; flex-direction: column; gap: 10px;">
+      <li><strong style="color: #fff;">Outreach Speed:</strong> Within 4 hours of threshold breach.</li>
+      <li><strong style="color: #fff;">Incentive:</strong> 15% discount for 6 months on 1-year contract lock.</li>
+      <li><strong style="color: #fff;">Escalation:</strong> Route directly to Level 2 Retention Specialist.</li>
+      <li><strong style="color: #fff;">Free Bundle:</strong> 90-day complimentary Tech Support & Cyber Shield.</li>
+    </ul>
+  </div>
+
+  <!-- Medium Risk Playbook -->
+  <div class="card-panel" style="border-top: 3px solid var(--warning);">
+    <div class="card-header-row">
+      <div class="card-title">
+        <i class="fa-solid fa-clock" style="color: var(--warning);"></i> Medium-Risk Protocol
+      </div>
+      <span class="badge badge-warning">PROB 35% - 65%</span>
+    </div>
+    <ul style="list-style: none; padding-left: 0; font-size: 0.86rem; color: #cbd5e1; display: flex; flex-direction: column; gap: 10px;">
+      <li><strong style="color: #fff;">Outreach Speed:</strong> Within 3 business days.</li>
+      <li><strong style="color: #fff;">Incentive:</strong> $25 bill credit for activating Auto-Pay.</li>
+      <li><strong style="color: #fff;">Engagement:</strong> Trigger targeted satisfaction survey.</li>
+      <li><strong style="color: #fff;">Feature Adoption:</strong> Nurture emails highlighting unused bundle tools.</li>
+    </ul>
+  </div>
+
+  <!-- Low Risk Playbook -->
+  <div class="card-panel" style="border-top: 3px solid var(--primary);">
+    <div class="card-header-row">
+      <div class="card-title">
+        <i class="fa-solid fa-crown" style="color: var(--primary);"></i> Low-Risk Protocol
+      </div>
+      <span class="badge badge-success">PROB &lt; 35%</span>
+    </div>
+    <ul style="list-style: none; padding-left: 0; font-size: 0.86rem; color: #cbd5e1; display: flex; flex-direction: column; gap: 10px;">
+      <li><strong style="color: #fff;">Cadence:</strong> Quarterly Value Realization summary.</li>
+      <li><strong style="color: #fff;">Loyalty Rewards:</strong> Annual tenure anniversary recognition.</li>
+      <li><strong style="color: #fff;">Expansion:</strong> Cross-sell Streaming & Device Protection packages.</li>
+      <li><strong style="color: #fff;">Advocacy:</strong> Invite to Customer Advisory Board and referral program.</li>
+    </ul>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  function recalculateROI() {
+    const cohort = parseInt(document.getElementById('input-cohort').value);
+    const arpu = parseFloat(document.getElementById('input-arpu').value);
+    const spend = parseFloat(document.getElementById('input-spend').value);
+    const successRate = parseFloat(document.getElementById('input-success').value) / 100.0;
+
+    document.getElementById('val-cohort').innerText = cohort;
+    document.getElementById('val-arpu').innerText = '$' + arpu;
+    document.getElementById('val-spend').innerText = '$' + spend;
+    document.getElementById('val-success').innerText = Math.round(successRate * 100) + '%';
+
+    const budget = cohort * spend;
+    const savedCount = Math.round(cohort * successRate);
+    const annualRevSaved = savedCount * (arpu * 12);
+    const netPreserved = annualRevSaved - budget;
+    const roi = Math.round((netPreserved / Math.max(budget, 1)) * 100);
+
+    document.getElementById('res-budget').innerText = '$' + budget.toLocaleString();
+    document.getElementById('res-saved-count').innerText = savedCount.toLocaleString();
+    document.getElementById('res-gross').innerText = '$' + annualRevSaved.toLocaleString();
+    document.getElementById('res-roi').innerText = (roi > 0 ? '+' : '') + roi + '% ROI';
+  }
+
+  ['input-cohort', 'input-arpu', 'input-spend', 'input-success'].forEach(id => {
+    document.getElementById(id).addEventListener('input', recalculateROI);
+  });
+  recalculateROI();
+</script>
+{% endblock %}

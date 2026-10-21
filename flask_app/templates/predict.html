@@ -1,0 +1,399 @@
+{% extends "base.html" %}
+
+{% block title %}Customer Churn Predictor & What-If Simulator | ChurnShield AI{% endblock %}
+
+{% block header_title %}
+  <i class="fa-solid fa-user-check" style="color: var(--primary);"></i> Real-Time Customer Predictor & What-If Simulator
+{% endblock %}
+
+{% block content %}
+<!-- Quick Profile Presets -->
+<div class="card-panel" style="margin-bottom: 24px; padding: 16px 24px;">
+  <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <i class="fa-solid fa-wand-magic-sparkles" style="color: var(--primary);"></i>
+      <span style="font-weight: 600; font-size: 0.9rem;">Test Profile Presets:</span>
+    </div>
+    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+      <button type="button" class="btn btn-secondary btn-sm btn-preset" data-preset="high_risk">
+        <i class="fa-solid fa-triangle-exclamation" style="color: var(--danger);"></i> At-Risk Profile
+      </button>
+      <button type="button" class="btn btn-secondary btn-sm btn-preset" data-preset="loyal">
+        <i class="fa-solid fa-shield-heart" style="color: var(--primary);"></i> Loyal Profile
+      </button>
+      <button type="button" class="btn btn-secondary btn-sm btn-preset" data-preset="enterprise">
+        <i class="fa-solid fa-briefcase" style="color: var(--secondary);"></i> Premium Profile
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Main Grid: Form on Left, Results on Right -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: 24px;">
+  
+  <!-- Left Column: Input Form -->
+  <div class="card-panel">
+    <div class="card-header-row">
+      <div>
+        <div class="card-title">
+          <i class="fa-solid fa-sliders" style="color: var(--primary);"></i> Customer Attributes
+        </div>
+        <div class="card-subtitle">Configure demographics, subscription tier, and service usage.</div>
+      </div>
+    </div>
+
+    <form id="predict-form">
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+        <div class="form-group">
+          <label class="form-label">Customer ID / Name</label>
+          <input type="text" name="customer_id" class="form-control" value="Mohd Shami" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Gender</label>
+          <select name="gender" class="form-select">
+            <option value="Male" selected>Male</option>
+            <option value="Female">Female</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px;">
+        <div class="form-group">
+          <label class="form-label">Senior Citizen</label>
+          <select name="SeniorCitizen" class="form-select">
+            <option value="0" selected>No (Under 65)</option>
+            <option value="1">Yes (Senior)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Partner</label>
+          <select name="Partner" class="form-select">
+            <option value="No" selected>No</option>
+            <option value="Yes">Yes</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Dependents</label>
+          <select name="Dependents" class="form-select">
+            <option value="No" selected>No</option>
+            <option value="Yes">Yes</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px;">
+        <div class="form-group">
+          <label class="form-label">Tenure (Months)</label>
+          <input type="number" name="tenure" class="form-control" min="0" max="72" value="4" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Monthly Bill ($)</label>
+          <input type="number" step="0.1" name="MonthlyCharges" class="form-control" min="15" max="150" value="89.5" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Total Spend ($)</label>
+          <input type="number" step="0.1" name="TotalCharges" class="form-control" min="0" max="10000" value="358.0" required>
+        </div>
+      </div>
+
+      <hr style="border-color: var(--border-subtle); margin: 16px 0;">
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+        <div class="form-group">
+          <label class="form-label">Contract Type</label>
+          <select name="Contract" class="form-select">
+            <option value="Month-to-month" selected>Month-to-month</option>
+            <option value="One year">One year</option>
+            <option value="Two year">Two year</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Internet Service</label>
+          <select name="InternetService" class="form-select">
+            <option value="Fiber optic" selected>Fiber optic</option>
+            <option value="DSL">DSL</option>
+            <option value="No">No Internet</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+        <div class="form-group">
+          <label class="form-label">Phone Service</label>
+          <select name="PhoneService" class="form-select">
+            <option value="Yes" selected>Yes</option>
+            <option value="No">No</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Multiple Lines</label>
+          <select name="MultipleLines" class="form-select">
+            <option value="No" selected>No</option>
+            <option value="Yes">Yes</option>
+            <option value="No phone service">No phone service</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+        <div class="form-group">
+          <label class="form-label">Online Security</label>
+          <select name="OnlineSecurity" class="form-select">
+            <option value="No" selected>No</option>
+            <option value="Yes">Yes</option>
+            <option value="No internet service">No internet service</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Tech Support</label>
+          <select name="TechSupport" class="form-select">
+            <option value="No" selected>No</option>
+            <option value="Yes">Yes</option>
+            <option value="No internet service">No internet service</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+        <div class="form-group">
+          <label class="form-label">Online Backup</label>
+          <select name="OnlineBackup" class="form-select">
+            <option value="No" selected>No</option>
+            <option value="Yes">Yes</option>
+            <option value="No internet service">No internet service</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Device Protection</label>
+          <select name="DeviceProtection" class="form-select">
+            <option value="No" selected>No</option>
+            <option value="Yes">Yes</option>
+            <option value="No internet service">No internet service</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+        <div class="form-group">
+          <label class="form-label">Streaming TV</label>
+          <select name="StreamingTV" class="form-select">
+            <option value="Yes" selected>Yes</option>
+            <option value="No">No</option>
+            <option value="No internet service">No internet service</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Streaming Movies</label>
+          <select name="StreamingMovies" class="form-select">
+            <option value="Yes" selected>Yes</option>
+            <option value="No">No</option>
+            <option value="No internet service">No internet service</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+        <div class="form-group">
+          <label class="form-label">Payment Method</label>
+          <select name="PaymentMethod" class="form-select">
+            <option value="Electronic check" selected>Electronic check</option>
+            <option value="Mailed check">Mailed check</option>
+            <option value="Bank transfer (automatic)">Bank transfer (automatic)</option>
+            <option value="Credit card (automatic)">Credit card (automatic)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Paperless Billing</label>
+          <select name="PaperlessBilling" class="form-select">
+            <option value="Yes" selected>Yes</option>
+            <option value="No">No</option>
+          </select>
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 10px; padding: 14px;">
+        <i class="fa-solid fa-calculator"></i> Run Ensemble Risk Prediction
+      </button>
+    </form>
+  </div>
+
+  <!-- Right Column: Real-Time Results & What-If Area -->
+  <div>
+    <!-- Placeholder before prediction -->
+    <div id="prediction-results-area" style="display: none;">
+      
+      <!-- Risk Gauge & Core Assessment Card -->
+      <div class="card-panel" style="margin-bottom: 24px;">
+        <div class="card-header-row">
+          <div>
+            <div class="card-title">
+              <i class="fa-solid fa-gauge-high" style="color: var(--primary);"></i> Churn Risk Assessment
+            </div>
+            <div class="card-subtitle" id="risk-urgency">Immediate action required</div>
+          </div>
+          <span id="risk-badge" class="badge badge-danger">HIGH RISK</span>
+        </div>
+
+        <div style="display: flex; align-items: center; justify-content: space-around; flex-wrap: wrap; gap: 20px;">
+          <!-- Animated Conic Gauge -->
+          <div class="radial-gauge-container">
+            <div class="gauge-circle" id="gauge-circle">
+              <div class="gauge-inner">
+                <span class="gauge-val" id="gauge-val">83.7%</span>
+                <span class="gauge-sub">Probability</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Financial Impact Cards -->
+          <div style="display: flex; flex-direction: column; gap: 10px; min-width: 220px;">
+            <div style="background: rgba(15, 23, 42, 0.7); padding: 10px 16px; border-radius: 8px; border-left: 3px solid var(--danger);">
+              <div style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase;">Annual Revenue At Risk</div>
+              <div style="font-size: 1.3rem; font-weight: 700; color: #fff;" id="disp-rev-risk">$898</div>
+            </div>
+
+            <div style="background: rgba(15, 23, 42, 0.7); padding: 10px 16px; border-radius: 8px; border-left: 3px solid var(--secondary);">
+              <div style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase;">Projected Customer Lifetime Value</div>
+              <div style="font-size: 1.3rem; font-weight: 700; color: #fff;" id="disp-projected-clv">$1,432</div>
+            </div>
+
+            <div style="background: rgba(15, 23, 42, 0.7); padding: 10px 16px; border-radius: 8px; border-left: 3px solid var(--primary);">
+              <div style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase;">Retention Intervention ROI</div>
+              <div style="font-size: 1.3rem; font-weight: 700; color: var(--primary);" id="disp-roi">+380%</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Real SHAP Feature Impact Bars -->
+      <div class="card-panel" style="margin-bottom: 24px;">
+        <div class="card-header-row">
+          <div>
+            <div class="card-title">
+              <i class="fa-solid fa-chart-column" style="color: var(--secondary);"></i> Key Factors Driving Risk (SHAP Attribution)
+            </div>
+            <div class="card-subtitle">Calculated dynamically using SHAP TreeExplainer values.</div>
+          </div>
+        </div>
+        <div id="feature-impacts-list"></div>
+      </div>
+
+      <!-- Interactive What-If Scenario Simulator -->
+      <div class="card-panel" id="whatif-panel" style="margin-bottom: 24px;">
+        <div class="card-header-row">
+          <div>
+            <div class="card-title">
+              <i class="fa-solid fa-code-compare" style="color: var(--info);"></i> Interactive What-If Simulator
+            </div>
+            <div class="card-subtitle">Test retention actions in real-time to observe immediate churn probability drops.</div>
+          </div>
+          <span id="sim-delta-badge" class="delta-badge">0.0% Delta</span>
+        </div>
+
+        <form id="whatif-form">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+            <div>
+              <label class="form-label" style="font-size: 0.8rem;">Change Contract</label>
+              <select name="Contract" class="form-select" style="padding: 6px 10px; font-size: 0.85rem;">
+                <option value="Month-to-month">Month-to-month</option>
+                <option value="One year">One year</option>
+                <option value="Two year">Two year</option>
+              </select>
+            </div>
+            <div>
+              <label class="form-label" style="font-size: 0.8rem;">Add Tech Support</label>
+              <select name="TechSupport" class="form-select" style="padding: 6px 10px; font-size: 0.85rem;">
+                <option value="No">No</option>
+                <option value="Yes">Yes</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div>
+              <label class="form-label" style="font-size: 0.8rem;">Add Cyber Security</label>
+              <select name="OnlineSecurity" class="form-select" style="padding: 6px 10px; font-size: 0.85rem;">
+                <option value="No">No</option>
+                <option value="Yes">Yes</option>
+              </select>
+            </div>
+            <div>
+              <label class="form-label" style="font-size: 0.8rem;">Switch Payment</label>
+              <select name="PaymentMethod" class="form-select" style="padding: 6px 10px; font-size: 0.85rem;">
+                <option value="Electronic check">Electronic check</option>
+                <option value="Bank transfer (automatic)">Bank transfer (automatic)</option>
+                <option value="Credit card (automatic)">Credit card (automatic)</option>
+              </select>
+            </div>
+          </div>
+        </form>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 14px; background: rgba(0,0,0,0.3); padding: 10px 14px; border-radius: 6px;">
+          <div style="font-size: 0.85rem; color: #94a3b8;">
+            Baseline: <strong id="sim-baseline-val" style="color: #fff;">--</strong>
+          </div>
+          <i class="fa-solid fa-arrow-right" style="color: var(--primary);"></i>
+          <div style="font-size: 0.85rem; color: #94a3b8;">
+            Simulated: <strong id="sim-scenario-val" style="color: var(--primary);">--</strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- Actionable Retention Playbook & Timeline -->
+      <div class="card-panel" style="margin-bottom: 24px;">
+        <div class="card-header-row">
+          <div>
+            <div class="card-title">
+              <i class="fa-solid fa-shield-halved" style="color: var(--primary);"></i> Actionable Retention Playbook
+            </div>
+            <div class="card-subtitle">Recommended interventions synthesized for this specific profile.</div>
+          </div>
+        </div>
+
+        <div id="strategies-list"></div>
+
+        <div style="margin-top: 18px;">
+          <h4 style="font-size: 0.95rem; margin-bottom: 10px; color: #fff;">14-Day Intervention Protocol</h4>
+          <ul id="timeline-list" style="list-style: none; padding-left: 0;"></ul>
+        </div>
+
+        <div style="margin-top: 18px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <h4 style="font-size: 0.95rem; color: #fff; margin: 0;">Automated Outreach Template</h4>
+            <button type="button" class="btn btn-secondary btn-sm btn-copy-text" data-target="template-email-body">
+              <i class="fa-regular fa-copy"></i> Copy Email
+            </button>
+          </div>
+          <pre id="template-email-body" style="background: rgba(0,0,0,0.4); padding: 14px; border-radius: 8px; font-size: 0.8rem; color: #cbd5e1; white-space: pre-wrap; font-family: inherit;"></pre>
+        </div>
+      </div>
+
+      <!-- Save Audit to DB Card -->
+      <div class="card-panel">
+        <div class="card-header-row">
+          <div class="card-title">
+            <i class="fa-solid fa-database" style="color: var(--primary);"></i> Save Audit to SQLite Database
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Retention Specialist Notes / Status</label>
+          <textarea id="customer-notes-input" class="form-control" rows="2" placeholder="e.g., Called customer, offered 15% discount on 1-year contract. Follow-up scheduled for Friday."></textarea>
+        </div>
+        <button type="button" id="btn-save-prediction" class="btn btn-primary btn-sm">
+          <i class="fa-solid fa-floppy-disk"></i> Save Prediction & Notes to Database
+        </button>
+      </div>
+
+    </div>
+
+    <!-- Empty state before run -->
+    <div id="empty-state-notice" class="card-panel" style="text-align: center; padding: 60px 20px;">
+      <i class="fa-solid fa-fingerprint" style="font-size: 3.5rem; color: rgba(0, 255, 170, 0.3); margin-bottom: 16px;"></i>
+      <h3 style="color: #fff; margin-bottom: 8px;">Ready for Evaluation</h3>
+      <p style="color: var(--text-muted); font-size: 0.9rem; max-width: 360px; margin: 0 auto 20px auto;">
+        Adjust customer attributes on the left or select a preset, then click <strong>Run Ensemble Risk Prediction</strong>.
+      </p>
+    </div>
+  </div>
+</div>
+{% endblock %}

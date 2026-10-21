@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}ChurnShield AI - Enterprise Customer Retention{% endblock %}</title>
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+  <div class="app-container">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="brand-section">
+        <div class="brand-icon">
+          <i class="fa-solid fa-shield-halved" style="color: #0b0f19;"></i>
+        </div>
+        <div class="brand-title">
+          <span>ChurnShield</span>
+          <span class="brand-subtitle">AI Intelligence</span>
+        </div>
+      </div>
+
+      <ul class="nav-menu">
+        <li class="nav-item {% if active_page == 'dashboard' %}active{% endif %}">
+          <a href="{{ url_for('main.index') }}">
+            <i class="fa-solid fa-chart-line"></i>
+            <span>Executive Dashboard</span>
+          </a>
+        </li>
+        <li class="nav-item {% if active_page == 'predict' %}active{% endif %}">
+          <a href="{{ url_for('main.predict') }}">
+            <i class="fa-solid fa-user-check"></i>
+            <span>Customer Predictor</span>
+          </a>
+        </li>
+        <li class="nav-item {% if active_page == 'batch' %}active{% endif %}">
+          <a href="{{ url_for('main.batch_predict') }}">
+            <i class="fa-solid fa-layer-group"></i>
+            <span>Batch CSV Engine</span>
+          </a>
+        </li>
+        <li class="nav-item {% if active_page == 'models' %}active{% endif %}">
+          <a href="{{ url_for('main.models_view') }}">
+            <i class="fa-solid fa-microchip"></i>
+            <span>ML Models & Benchmark</span>
+          </a>
+        </li>
+        <li class="nav-item {% if active_page == 'retention' %}active{% endif %}">
+          <a href="{{ url_for('main.retention_view') }}">
+            <i class="fa-solid fa-hand-holding-dollar"></i>
+            <span>Retention & CLV ROI</span>
+          </a>
+        </li>
+        <li class="nav-item {% if active_page == 'history' %}active{% endif %}">
+          <a href="{{ url_for('main.history_view') }}">
+            <i class="fa-solid fa-clock-rotate-left"></i>
+            <span>Audit History & DB</span>
+          </a>
+        </li>
+      </ul>
+
+      <div class="sidebar-footer">
+        <p>ChurnShield AI v2.0</p>
+        <p style="color: #64748b; font-size: 0.72rem;">Academic & Major Project Edition</p>
+      </div>
+    </aside>
+
+    <!-- Main View Wrapper -->
+    <div class="main-wrapper">
+      <header class="topbar">
+        <div class="page-title">
+          {% block header_title %}
+            <i class="fa-solid fa-shield-halved" style="color: var(--primary);"></i> ChurnShield AI
+          {% endblock %}
+        </div>
+        <div class="topbar-actions">
+          <div class="system-badge">
+            <span class="pulse-dot"></span>
+            <span>ENSEMBLE ACTIVE (AUC: 0.847)</span>
+          </div>
+          <a href="{{ url_for('main.predict') }}" class="btn btn-primary btn-sm">
+            <i class="fa-solid fa-bolt"></i> Instant Predict
+          </a>
+        </div>
+      </header>
+
+      <main class="content-body">
+        <!-- Flash messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category }}" style="background: rgba(255, 61, 87, 0.15); border: 1px solid var(--danger); color: #fff; padding: 12px 18px; border-radius: 8px; margin-bottom: 20px;">
+                {{ message }}
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+      </main>
+
+      <footer style="text-align: center; padding: 20px; font-size: 0.8rem; color: var(--text-dim); border-top: 1px solid var(--border-subtle);">
+        ChurnShield AI • Enterprise Predictive Retention Architecture • Designed for Production & Academic Submission • Developed by Mohd Shami
+      </footer>
+    </div>
+  </div>
+
+  <!-- Custom Scripts -->
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  {% block extra_scripts %}{% endblock %}
+</body>
+</html>
