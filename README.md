@@ -149,7 +149,7 @@ These engineered features capture non-linear interactions that single variables 
 ## Setup Instructions
 
 # Clone the repository
-git clone https://github.com/codewithshami/ChurnShield_AI.git
+git clone https://github.com/mohdshamii/ChurnShield_AI.git
 cd ChurnShield_AI
 
 # Create and activate virtual environment
