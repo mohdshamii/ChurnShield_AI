@@ -65,11 +65,6 @@ Built with advanced machine learning models and an interactive dashboard, it ena
 - Streamlit 1.22
 - Plotly 5.13
 
----
-## Ouput 
-![Dashboard](./img/output01.png)
-![ Key Factors Influencing Prediction](./img/output02.png)
-![Churn Trends Analysis](./img/output03.png)
 
 ##  Enhanced Dataset Features
 
