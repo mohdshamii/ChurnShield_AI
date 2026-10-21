@@ -1,14 +1,13 @@
-# 💼 ChurnShield AI - Advanced Customer Retention Solution
+#  ChurnShield AI - Advanced Customer Retention Solution
 
-![ChurnShield Banner](./banner.png)
 
-## 🚀 Overview
+##  Overview
 
 ChurnShield AI is an AI-powered customer churn prediction system that helps businesses identify customers at risk of leaving and provides actionable retention strategies.
 Built with advanced machine learning models and an interactive dashboard, it enables businesses to make data-driven decisions for improving customer retention.
 
 
-## 🔍 Key Insights from Analysis
+##  Key Insights from Analysis
 ![EDA Dashboard](./img/eda.png)
 ![Logistic Regression Confusion Matrix](./img/logistic.png)
 ![Random Forest Confusion Matrix](./img/randomforest.png)
@@ -18,31 +17,31 @@ Built with advanced machine learning models and an interactive dashboard, it ena
 
 ---
 
-## ✨ Unique Features
+##  Unique Features
 
-### 🎯 Precision Prediction Engine
+###  Precision Prediction Engine
 - **Multi-model ensemble** (XGBoost + Random Forest + Logistic Regression)
 - **SHAP explainability** for transparent risk scoring
 - **Real-time probability** adjustments
 
-### 📊 Executive Intelligence Dashboard
+###  Executive Intelligence Dashboard
 - **Customer segmentation** by risk profile
 - **Lifetime value preservation** estimates
 - **Retention ROI calculator**
 
-### ⚡ Actionable Retention Toolkit
+###  Actionable Retention Toolkit
 - **Personalized intervention** recommendations
 - **Automated campaign triggers** (email/SMS templates included)
 - **Win-back incentive** simulator
 
-### 🔄 Continuous Learning
+###  Continuous Learning
 - **Feedback loop** integration
 - **Model auto-refresh** with new data
 - **Performance monitoring** alerts
 
 ---
 
-## 📈 Performance Metrics
+## Performance Metrics
 
 | Model | Accuracy | Precision | Recall | AUC |
 |-------|----------|-----------|--------|-----|
@@ -53,7 +52,7 @@ Built with advanced machine learning models and an interactive dashboard, it ena
 
 ---
 
-## 🛠 Tech Stack Deep Dive
+##  Tech Stack Deep Dive
 
 **Core ML:**
 - Python 3.10
@@ -71,7 +70,7 @@ Built with advanced machine learning models and an interactive dashboard, it ena
 ![ Key Factors Influencing Prediction](./img/output02.png)
 ![Churn Trends Analysis](./img/output03.png)
 
-## 🗂️ Enhanced Dataset Features
+##  Enhanced Dataset Features
 
 Original dataset enriched with:
 - **Customer lifetime value** estimates
@@ -95,11 +94,11 @@ df['HighCostLongTenure'] = ((df['MonthlyCharges'] > df['MonthlyCharges'].quantil
 
 ---
 
-## 🚀 Getting Started
+##  Getting Started
 
 ```bash
 # Clone repository
-git clone https://github.com/codewithshami/ChurnShield_AI.git
+git clone https://github.com/mohdshamii/ChurnShield_AI.git
 
 # Set up environment
 pip install -r requirements.txt
@@ -124,11 +123,11 @@ graph TD
 
 ---
 
-## 📬 Contact & Support
+##  Contact & Support
 
 **Lead Developer:** Mohd Shami  
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-blue)](https://www.linkedin.com/in/mohd-shami-792133276)  
-[![Email](https://img.shields.io/badge/Email-Contact%20Us-red)](mailto:shamimohd367@gmail.com)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-blue)](https://www.linkedin.com/in/mohdshamii)  
+[![Email](https://img.shields.io/badge/Email-Contact%20Us-red)](mailto:codexshami@gmail.com)
 
 
 **Community Support:**  
