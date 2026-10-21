@@ -7,13 +7,14 @@ ChurnShield AI is an AI-powered customer churn prediction system that helps busi
 Built with advanced machine learning models and an interactive dashboard, it enables businesses to make data-driven decisions for improving customer retention.
 
 
-##  Key Insights from Analysis
-![EDA Dashboard](./img/eda.png)
-![Logistic Regression Confusion Matrix](./img/logistic.png)
-![Random Forest Confusion Matrix](./img/randomforest.png)
-![XgBoost Confusion Matrix](./img/xgboost.png)
+## Key Insights from Analysis
 
-
+| Analysis / Model | Visualization |
+|---|---|
+| Exploratory Data Analysis (EDA) | ![EDA Dashboard](./img/eda.png) |
+| Logistic Regression | ![Logistic Regression Confusion Matrix](./img/logistic.png) |
+| Random Forest | ![Random Forest Confusion Matrix](./img/randomforest.png) |
+| XGBoost | ![XGBoost Confusion Matrix](./img/xgboost.png) |
 
 ---
 
