@@ -1,0 +1,48 @@
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+
+# Machine learning artifacts
+*.pkl
+*.pickle
+*.joblib
+*.h5
+*.keras
+*.onnx
+*.pt
+*.pth
+models/saved/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Data files
+data/raw/
+data/processed/
+
+# Logs and temporary files
+*.log
+tmp/
+temp/
+
+# IDE and OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+Desktop.ini
