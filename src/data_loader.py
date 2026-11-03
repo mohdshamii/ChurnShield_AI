@@ -1,25 +1,25 @@
 """
-ChurnShield AI - Data Loader & Feature Engineering Pipeline
-Handles data ingestion, validation, cleaning, advanced feature engineering,
-and transformation for training and real-time inference.
+ChurnShield AI - Data Loader & Customer Intelligence Feature Engineering Engine
+Handles data ingestion, validation, cleaning, dynamic schema detection,
+advanced feature engineering, and transformation for model training and real-time inference.
 """
 
 import json
 import logging
 import os
+from typing import Tuple, Dict, Any, List, Optional
+import joblib
 import numpy as np
 import pandas as pd
-from typing import Tuple, Dict, Any, List, Optional
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
-import joblib
 
 from src import config
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 
-# Canonical categorical and binary columns
+# Canonical categorical and binary columns in standard Telco schema
 BINARY_COLS = ['gender', 'Partner', 'Dependents', 'PhoneService', 'PaperlessBilling']
 MULTI_COLS = [
     'MultipleLines', 'InternetService', 'OnlineSecurity', 'OnlineBackup',
@@ -46,7 +46,7 @@ BASE_FEATURE_NAMES = [
 
 
 class DataLoader:
-    """Production data loading, cleaning, and preprocessing pipeline."""
+    """Production data loading, cleaning, dynamic schema detection, and preprocessing pipeline."""
 
     def __init__(self, data_path: Optional[str] = None):
         self.data_path = data_path or config.DATA_PATH
@@ -71,19 +71,62 @@ class DataLoader:
         return df
 
     @staticmethod
+    def detect_schema_categories(df: pd.DataFrame) -> Dict[str, List[str]]:
+        """
+        Dynamically detects present customer intelligence feature categories.
+        Never fabricates features; inspects actual dataset columns.
+        """
+        cols = set(df.columns)
+        categories: Dict[str, List[str]] = {
+            "demographics": [c for c in cols if c.lower() in [
+                'gender', 'seniorcitizen', 'partner', 'dependents', 'age', 'location', 'country', 'city', 'state'
+            ]],
+            "account": [c for c in cols if c.lower() in [
+                'tenure', 'contract', 'customerid', 'registrationdate', 'signupdate', 'subscriptionduration'
+            ]],
+            "financial": [c for c in cols if c.lower() in [
+                'monthlycharges', 'totalcharges', 'paymentmethod', 'paperlessbilling', 'arpu',
+                'clv', 'paymentfailures', 'outstandingbalance', 'billingcycle'
+            ]],
+            "services": [c for c in cols if c.lower() in [
+                'phoneservice', 'multiplelines', 'internetservice', 'onlinesecurity', 'onlinebackup',
+                'deviceprotection', 'techsupport', 'streamingtv', 'streamingmovies'
+            ]],
+            "behavioral": [c for c in cols if c.lower() in [
+                'loginfrequency', 'sessionduration', 'inactivitydays', 'engagementscore',
+                'servicedowngrades', 'productadoption', 'usagetrend'
+            ]],
+            "support": [c for c in cols if c.lower() in [
+                'complaintcount', 'supporttickets', 'avgresolutiontime', 'escalationfrequency', 'csat'
+            ]],
+            "engineered": [c for c in cols if c in [
+                'TenureToChargeRatio', 'TotalValueScore', 'ServiceDensity', 'PaymentRisk',
+                'HighCostLongTenure', 'ActiveServiceCount'
+            ]]
+        }
+        return categories
+
+    @staticmethod
     def clean_data(df: pd.DataFrame, drop_customer_id: bool = True) -> pd.DataFrame:
         """
-        Cleans data types, treats whitespaces in TotalCharges, and handles missing values.
+        Cleans data types, treats whitespace strings in TotalCharges,
+        and safely imputes missing values.
         """
         df_clean = df.copy()
 
         # TotalCharges has empty spaces ' ' for new customers where tenure == 0
         if 'TotalCharges' in df_clean.columns:
-            df_clean['TotalCharges'] = pd.to_numeric(df_clean['TotalCharges'].astype(str).str.strip(), errors='coerce')
+            df_clean['TotalCharges'] = pd.to_numeric(
+                df_clean['TotalCharges'].astype(str).str.strip(), errors='coerce'
+            )
             # For customers with tenure == 0, TotalCharges is legitimately 0
-            df_clean.loc[df_clean['TotalCharges'].isna() & (df_clean['tenure'] == 0), 'TotalCharges'] = 0.0
-            # If any remaining missing TotalCharges, impute with MonthlyCharges * tenure
-            df_clean['TotalCharges'] = df_clean['TotalCharges'].fillna(df_clean['MonthlyCharges'] * df_clean['tenure'])
+            if 'tenure' in df_clean.columns:
+                df_clean.loc[df_clean['TotalCharges'].isna() & (df_clean['tenure'] == 0), 'TotalCharges'] = 0.0
+                df_clean['TotalCharges'] = df_clean['TotalCharges'].fillna(
+                    df_clean['MonthlyCharges'] * df_clean['tenure'] if 'MonthlyCharges' in df_clean.columns else 0.0
+                )
+            else:
+                df_clean['TotalCharges'] = df_clean['TotalCharges'].fillna(0.0)
 
         # SeniorCitizen to int
         if 'SeniorCitizen' in df_clean.columns:
@@ -98,33 +141,104 @@ class DataLoader:
     def add_engineered_features(df: pd.DataFrame) -> pd.DataFrame:
         """
         Adds high-signal domain features for customer retention & churn modeling.
+        Computes features only when prerequisite columns exist.
         """
         df_eng = df.copy()
 
-        # Tenure to monthly charge ratio
+        # 1. Tenure to monthly charge ratio
         if 'tenure' in df_eng.columns and 'MonthlyCharges' in df_eng.columns:
             df_eng['TenureToChargeRatio'] = df_eng['tenure'] / (df_eng['MonthlyCharges'] + 1e-6)
 
-        # Total Value Realization Score
+        # 2. Total Value Realization Score
         if 'tenure' in df_eng.columns and 'MonthlyCharges' in df_eng.columns and 'TotalCharges' in df_eng.columns:
             df_eng['TotalValueScore'] = (df_eng['tenure'] * df_eng['MonthlyCharges']) / (df_eng['TotalCharges'] + 1e-6)
 
-        # Service Density (Count of active security/tech/backup subscriptions)
+        # 3. Service Density (Count of active security/tech/backup subscriptions)
         service_cols = ['OnlineSecurity', 'OnlineBackup', 'DeviceProtection', 'TechSupport']
         active_counts = []
         for _, row in df_eng.iterrows():
-            cnt = sum(1 for col in service_cols if col in row and str(row[col]).lower() == 'yes')
+            cnt = sum(1 for col in service_cols if col in row and str(row[col]).strip().lower() == 'yes')
             active_counts.append(cnt)
         df_eng['ActiveServiceCount'] = active_counts
+
         if 'tenure' in df_eng.columns:
             df_eng['ServiceDensity'] = df_eng['ActiveServiceCount'] / (df_eng['tenure'] + 1.0)
 
-        # High Payment Risk (Month-to-month + Electronic check)
-        is_m2m = df_eng['Contract'].astype(str).str.contains('Month-to-month', case=False, na=False) if 'Contract' in df_eng.columns else False
-        is_echeck = df_eng['PaymentMethod'].astype(str).str.contains('Electronic check', case=False, na=False) if 'PaymentMethod' in df_eng.columns else False
+        # 4. Payment Risk (Month-to-month + Electronic check)
+        is_m2m = df_eng['Contract'].astype(str).str.contains('Month-to-month', case=False, na=False) if 'Contract' in df_eng.columns else pd.Series(False, index=df_eng.index)
+        is_echeck = df_eng['PaymentMethod'].astype(str).str.contains('Electronic check', case=False, na=False) if 'PaymentMethod' in df_eng.columns else pd.Series(False, index=df_eng.index)
         df_eng['PaymentRisk'] = (is_m2m & is_echeck).astype(int)
 
+        # 5. High Cost Long Tenure Segment Indicator
+        if 'MonthlyCharges' in df_eng.columns and 'tenure' in df_eng.columns:
+            m_p75 = df_eng['MonthlyCharges'].quantile(0.75) if len(df_eng) > 1 else 70.0
+            t_med = df_eng['tenure'].median() if len(df_eng) > 1 else 24.0
+            df_eng['HighCostLongTenure'] = (
+                (df_eng['MonthlyCharges'] > m_p75) & (df_eng['tenure'] > t_med)
+            ).astype(int)
+
+        # 6. Behavioral indicators if support columns exist
+        if 'SupportTickets' in df_eng.columns and 'tenure' in df_eng.columns:
+            df_eng['TicketRate'] = df_eng['SupportTickets'] / (df_eng['tenure'] + 1.0)
+
         return df_eng
+
+    def validate_dataset(self, df: pd.DataFrame) -> Dict[str, Any]:
+        """
+        Performs thorough validation and data quality checks on an arbitrary dataframe.
+        Returns a structured validation and quality report.
+        """
+        issues = []
+        warnings = []
+        n_rows, n_cols = df.shape
+
+        if n_rows == 0:
+            return {"valid": False, "score": 0, "issues": ["Dataset is completely empty."]}
+
+        # Check for missing values
+        null_counts = df.isnull().sum()
+        cols_with_nulls = null_counts[null_counts > 0].to_dict()
+        total_missing = int(null_counts.sum())
+        missing_pct = round((total_missing / (n_rows * n_cols)) * 100, 2)
+
+        if missing_pct > 15:
+            issues.append(f"High missingness rate: {missing_pct}% of total cells are null.")
+        elif missing_pct > 0:
+            warnings.append(f"Missing values present: {len(cols_with_nulls)} columns contain missing cells ({missing_pct}% total).")
+
+        # Check for duplicate rows
+        duplicates = int(df.duplicated().sum())
+        if duplicates > 0:
+            warnings.append(f"Detected {duplicates} duplicate rows ({round((duplicates/n_rows)*100, 2)}%).")
+
+        # Check required/expected modeling columns
+        missing_core_cols = [c for c in ['tenure', 'MonthlyCharges', 'Contract'] if c not in df.columns]
+        if missing_core_cols:
+            issues.append(f"Missing core features required for predictive scoring: {missing_core_cols}")
+
+        # Quality score calculation (0 - 100)
+        quality_score = 100
+        quality_score -= min(missing_pct * 2, 40)
+        quality_score -= min((duplicates / n_rows) * 100, 20)
+        if missing_core_cols:
+            quality_score -= 30
+        quality_score = max(int(round(quality_score)), 0)
+
+        schema_categories = self.detect_schema_categories(df)
+
+        return {
+            "valid": len(issues) == 0,
+            "quality_score": quality_score,
+            "row_count": n_rows,
+            "column_count": n_cols,
+            "missing_cells": total_missing,
+            "missing_pct": missing_pct,
+            "cols_with_nulls": cols_with_nulls,
+            "duplicate_count": duplicates,
+            "issues": issues,
+            "warnings": warnings,
+            "detected_categories": schema_categories
+        }
 
     def preprocess_for_training(self, df: pd.DataFrame) -> Tuple[pd.DataFrame, pd.Series, List[str]]:
         """
@@ -139,7 +253,7 @@ class DataLoader:
         if 'Churn' not in df_clean.columns:
             raise ValueError("Target column 'Churn' not found in dataset for training.")
 
-        y = df_clean['Churn'].map({'Yes': 1, 'No': 0, 1: 1, 0: 0})
+        y = df_clean['Churn'].map({'Yes': 1, 'No': 0, 1: 1, 0: 0, '1': 1, '0': 0})
         # If any rows lacked valid Churn label, drop them
         valid_mask = y.notna()
         df_clean = df_clean[valid_mask].reset_index(drop=True)
@@ -160,7 +274,7 @@ class DataLoader:
         # Align with canonical feature names
         for feat in self.feature_names:
             if feat not in X_encoded.columns:
-                X_encoded[feat] = 0
+                X_encoded[feat] = 0.0
 
         X_final = X_encoded[self.feature_names].astype(float)
         return X_final, y, self.feature_names
@@ -172,7 +286,7 @@ class DataLoader:
     ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.Series, pd.Series]:
         """
         Returns stratified train-test splits adhering to ML best practices.
-        Splits data BEFORE applying standardization.
+        Splits data BEFORE applying standardization to prevent leakage.
         """
         df_raw = self.load_raw_data()
         X, y, _ = self.preprocess_for_training(df_raw)
@@ -192,7 +306,6 @@ class DataLoader:
         Transforms a raw customer dictionary (from web form or API)
         into a 1-row DataFrame aligned with model features.
         """
-        # Copy to avoid side effects
         d = dict(input_dict)
 
         # Numeric fields with safe casting
@@ -279,12 +392,14 @@ class DataLoader:
         df_row = pd.DataFrame([row])[self.feature_names]
         return df_row
 
-    def prepare_batch_df(self, batch_df: pd.DataFrame) -> Tuple[pd.DataFrame, Optional[pd.Series], List[str]]:
+    def prepare_batch_df(self, batch_df: pd.DataFrame) -> Tuple[pd.DataFrame, List[str], List[str]]:
         """
         Prepares an arbitrary uploaded customer CSV DataFrame for batch prediction.
         Preserves customerID if present for reporting.
         """
-        customer_ids = batch_df['customerID'].tolist() if 'customerID' in batch_df.columns else [f"CUST-{i+1:04d}" for i in range(len(batch_df))]
+        customer_ids = batch_df['customerID'].tolist() if 'customerID' in batch_df.columns else [
+            f"CUST-{i+1:04d}" for i in range(len(batch_df))
+        ]
         df_clean = self.clean_data(batch_df, drop_customer_id=False)
 
         # Encode binary variables

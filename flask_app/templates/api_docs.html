@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+
+{% block title %}REST API Documentation | ChurnShield AI{% endblock %}
+
+{% block header_title %}
+  <i class="fa-solid fa-code"></i> ChurnShield AI Enterprise REST API Specification
+{% endblock %}
+
+{% block content %}
+<!-- API Overview Banner -->
+<div class="card-panel" style="margin-bottom: 24px; border-left: 4px solid var(--primary); background: var(--bg-subtle);">
+  <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
+    <div>
+      <h3 style="font-size: 1.05rem; margin-bottom: 4px; color: var(--text-primary);">Production Retention & Inference API</h3>
+      <p style="font-size: 0.84rem; color: var(--text-secondary); margin: 0;">
+        Programmatic access for customer retention automation, CRM integration, real-time scoring, and monitoring telemetry.
+      </p>
+    </div>
+    <div>
+      <span class="badge badge-success" style="font-size: 0.78rem; padding: 5px 12px;">v2.0 RESTful OpenAPI Spec</span>
+    </div>
+  </div>
+</div>
+
+<!-- API Endpoints List -->
+<div style="display: flex; flex-direction: column; gap: 20px;">
+
+  <!-- 1. POST /api/predict -->
+  <div class="card-panel">
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; flex-wrap: wrap; gap: 10px;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <span class="badge" style="background: var(--primary-light); color: var(--primary); border: 1px solid var(--primary-border); font-weight: 700;">POST</span>
+        <code style="font-size: 0.95rem; color: var(--text-primary); font-family: 'JetBrains Mono', monospace; font-weight: 600;">/api/predict</code>
+      </div>
+      <div style="font-size: 0.78rem; color: var(--text-dim);">Single Customer Inference & Retention Analysis</div>
+    </div>
+    <p style="font-size: 0.84rem; color: var(--text-secondary); margin-bottom: 14px;">
+      Evaluates customer features across the Soft Voting Ensemble, outputs churn probability, financial CLV metrics, and personalized retention playbooks.
+    </p>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px;">
+      <div>
+        <div style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 5px; font-weight: 600;">Sample Request Payload</div>
+        <pre style="background: var(--bg-subtle); border: 1px solid var(--border-color); padding: 12px; border-radius: var(--radius-md); font-family: 'JetBrains Mono', monospace; font-size: 0.76rem; color: var(--text-primary); overflow-x: auto;">{
+  "customer_id": "CUST-9021",
+  "tenure": 4,
+  "MonthlyCharges": 89.5,
+  "TotalCharges": 358.0,
+  "Contract": "Month-to-month",
+  "InternetService": "Fiber optic",
+  "PaymentMethod": "Electronic check",
+  "TechSupport": "No",
+  "OnlineSecurity": "No"
+}</pre>
+      </div>
+      <div>
+        <div style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 5px; font-weight: 600;">Sample 200 OK Response</div>
+        <pre style="background: var(--bg-subtle); border: 1px solid var(--border-color); padding: 12px; border-radius: var(--radius-md); font-family: 'JetBrains Mono', monospace; font-size: 0.76rem; color: var(--primary); overflow-x: auto;">{
+  "status": "success",
+  "prediction_id": 142,
+  "customer_id": "CUST-9021",
+  "churn_probability": 0.7842,
+  "churn_percentage": 78.4,
+  "risk_level": "HIGH",
+  "financial_clv_roi": {
+    "annual_revenue": 1074.0,
+    "revenue_at_risk": 842.23,
+    "retention_roi_percent": 340.5
+  }
+}</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. POST /api/what-if -->
+  <div class="card-panel">
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; flex-wrap: wrap; gap: 10px;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <span class="badge" style="background: var(--primary-light); color: var(--primary); border: 1px solid var(--primary-border); font-weight: 700;">POST</span>
+        <code style="font-size: 0.95rem; color: var(--text-primary); font-family: 'JetBrains Mono', monospace; font-weight: 600;">/api/what-if</code>
+      </div>
+      <div style="font-size: 0.78rem; color: var(--text-dim);">Counterfactual Intervention Simulation</div>
+    </div>
+    <p style="font-size: 0.84rem; color: var(--text-secondary); margin-bottom: 14px;">
+      Simulates the delta in churn probability between a customer baseline and an intervened scenario (e.g. upgraded contract or added tech support).
+    </p>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px;">
+      <div>
+        <div style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 5px; font-weight: 600;">Request Body</div>
+        <pre style="background: var(--bg-subtle); border: 1px solid var(--border-color); padding: 12px; border-radius: var(--radius-md); font-family: 'JetBrains Mono', monospace; font-size: 0.76rem; color: var(--text-primary); overflow-x: auto;">{
+  "baseline": { "Contract": "Month-to-month", "tenure": 2 },
+  "scenario": { "Contract": "Two year", "tenure": 2 }
+}</pre>
+      </div>
+      <div>
+        <div style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 5px; font-weight: 600;">Response</div>
+        <pre style="background: var(--bg-subtle); border: 1px solid var(--border-color); padding: 12px; border-radius: var(--radius-md); font-family: 'JetBrains Mono', monospace; font-size: 0.76rem; color: var(--success); overflow-x: auto;">{
+  "success": true,
+  "baseline_prob": 76.5,
+  "scenario_prob": 18.2,
+  "percent_risk_reduction": 58.3,
+  "risk_mitigated": true
+}</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. GET /api/models -->
+  <div class="card-panel">
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; flex-wrap: wrap; gap: 10px;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <span class="badge" style="background: var(--success-light); color: var(--success); border: 1px solid var(--success-border); font-weight: 700;">GET</span>
+        <code style="font-size: 0.95rem; color: var(--text-primary); font-family: 'JetBrains Mono', monospace; font-weight: 600;">/api/models</code>
+      </div>
+      <div style="font-size: 0.78rem; color: var(--text-dim);">Model Benchmark Matrix</div>
+    </div>
+    <p style="font-size: 0.84rem; color: var(--text-secondary); margin: 0;">
+      Returns cross-validation and test set evaluation metrics across all registered champion and candidate models.
+    </p>
+  </div>
+
+  <!-- 4. GET /api/monitoring/drift -->
+  <div class="card-panel">
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; flex-wrap: wrap; gap: 10px;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <span class="badge" style="background: var(--success-light); color: var(--success); border: 1px solid var(--success-border); font-weight: 700;">GET</span>
+        <code style="font-size: 0.95rem; color: var(--text-primary); font-family: 'JetBrains Mono', monospace; font-weight: 600;">/api/monitoring/drift</code>
+      </div>
+      <div style="font-size: 0.78rem; color: var(--text-dim);">Live PSI & Data Drift Telemetry</div>
+    </div>
+    <p style="font-size: 0.84rem; color: var(--text-secondary); margin: 0;">
+      Returns Population Stability Index (PSI) scores, Kolmogorov-Smirnov distribution tests, and automated retraining signals.
+    </p>
+  </div>
+</div>
+{% endblock %}

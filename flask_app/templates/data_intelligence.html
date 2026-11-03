@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+
+{% block title %}Data Intelligence Studio | ChurnShield AI{% endblock %}
+
+{% block header_title %}
+  <i class="fa-solid fa-database"></i> Data Intelligence & Dataset Profiling Studio
+{% endblock %}
+
+{% block content %}
+<!-- Upload New Dataset for Profiling -->
+<div class="card-panel" style="margin-bottom: 24px;">
+  <div class="card-header-row">
+    <div>
+      <div class="card-title">
+        <i class="fa-solid fa-file-arrow-up"></i> Profile Customer Dataset
+      </div>
+      <div class="card-subtitle">Upload any CSV or Excel file to audit missingness, duplicates, outliers, and schema quality.</div>
+    </div>
+  </div>
+
+  <form method="POST" enctype="multipart/form-data" action="{{ url_for('main.data_intelligence_view') }}" style="display: flex; gap: 14px; align-items: center; flex-wrap: wrap;">
+    <input type="file" name="file" accept=".csv, .xlsx, .xls" class="form-control" style="max-width: 380px;" required>
+    <button type="submit" class="btn btn-primary">
+      <i class="fa-solid fa-wand-magic-sparkles"></i> Profile Uploaded Dataset
+    </button>
+  </form>
+</div>
+
+<!-- Quality Score Overview Grid -->
+<div class="kpi-grid">
+  <div class="kpi-card">
+    <div>
+      <div class="kpi-label">Data Quality Score</div>
+      <div class="kpi-value" style="color: {% if profile.quality_score >= 80 %}var(--success){% else %}var(--warning){% endif %};">
+        {{ profile.quality_score }}%
+      </div>
+    </div>
+    <div class="kpi-subtext">
+      <span class="badge {{ 'badge-success' if profile.quality_rating == 'EXCELLENT' else 'badge-warning' }}">
+        {{ profile.quality_rating }}
+      </span>
+    </div>
+  </div>
+
+  <div class="kpi-card">
+    <div>
+      <div class="kpi-label">Audited Records</div>
+      <div class="kpi-value">{{ profile.total_rows }}</div>
+    </div>
+    <div class="kpi-subtext">
+      <i class="fa-solid fa-table-cells" style="color: var(--primary);"></i> Across {{ profile.total_columns }} Columns
+    </div>
+  </div>
+
+  <div class="kpi-card">
+    <div>
+      <div class="kpi-label">Missing Cells</div>
+      <div class="kpi-value" style="color: {% if profile.missing_rate_pct > 0 %}var(--warning){% else %}var(--success){% endif %};">
+        {{ profile.total_missing_cells }} <span style="font-size: 0.85rem; font-weight: normal; color: var(--text-muted);">({{ profile.missing_rate_pct }}%)</span>
+      </div>
+    </div>
+    <div class="kpi-subtext">
+      <i class="fa-solid fa-circle-question" style="color: var(--warning);"></i> Total Null Audit
+    </div>
+  </div>
+
+  <div class="kpi-card">
+    <div>
+      <div class="kpi-label">Duplicate Rows</div>
+      <div class="kpi-value" style="color: {% if profile.duplicate_count > 0 %}var(--danger){% else %}var(--success){% endif %};">
+        {{ profile.duplicate_count }}
+      </div>
+    </div>
+    <div class="kpi-subtext">
+      <i class="fa-solid fa-copy"></i> Identical Record Tuples
+    </div>
+  </div>
+</div>
+
+<!-- Recommendations & Preprocessing Roadmap -->
+<div class="card-panel" style="margin-bottom: 24px; border-left: 4px solid var(--primary); background: var(--bg-subtle);">
+  <div class="card-header-row">
+    <div>
+      <div class="card-title">
+        <i class="fa-solid fa-road"></i> Automated Data Cleaning & Preprocessing Roadmap
+      </div>
+      <div class="card-subtitle">Automated suggestions generated from schema profiling.</div>
+    </div>
+  </div>
+
+  <ul style="list-style: none; display: flex; flex-direction: column; gap: 8px; margin-top: 6px;">
+    {% for rec in profile.recommendations %}
+    <li style="display: flex; align-items: center; gap: 10px; font-size: 0.86rem; color: var(--text-secondary);">
+      <i class="fa-solid fa-circle-check" style="color: var(--success);"></i>
+      <span>{{ rec }}</span>
+    </li>
+    {% endfor %}
+  </ul>
+</div>
+
+<!-- Outliers & Feature Summary Statistics -->
+<div class="card-panel" style="margin-bottom: 24px;">
+  <div class="card-header-row">
+    <div>
+      <div class="card-title">
+        <i class="fa-solid fa-chart-line"></i> Numerical Feature Statistical Distribution & Outliers (IQR)
+      </div>
+      <div class="card-subtitle">Interquartile range analysis with median and spread metrics.</div>
+    </div>
+  </div>
+
+  <div class="table-responsive">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Feature</th>
+          <th>Mean</th>
+          <th>Std Dev</th>
+          <th>Min</th>
+          <th>Median</th>
+          <th>Max</th>
+          <th>Outlier Count</th>
+          <th>Outlier %</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for s in profile.numeric_stats %}
+        <tr>
+          <td><strong style="color: var(--text-primary);">{{ s.column }}</strong></td>
+          <td>{{ s.mean }}</td>
+          <td>{{ s.std }}</td>
+          <td>{{ s.min }}</td>
+          <td>{{ s.median }}</td>
+          <td>{{ s.max }}</td>
+          <td>
+            {% set matched_out = profile.outliers|selectattr('column', 'equalto', s.column)|first %}
+            {% if matched_out %}
+              <span style="font-weight: 600; color: {% if matched_out.outlier_count > 0 %}var(--warning){% else %}var(--success){% endif %};">
+                {{ matched_out.outlier_count }}
+              </span>
+            {% else %}
+              0
+            {% endif %}
+          </td>
+          <td>
+            {% set matched_out = profile.outliers|selectattr('column', 'equalto', s.column)|first %}
+            {% if matched_out %}
+              {{ matched_out.outlier_pct }}%
+            {% else %}
+              0.0%
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

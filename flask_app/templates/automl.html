@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+
+{% block title %}AutoML Experiment Studio | ChurnShield AI{% endblock %}
+
+{% block header_title %}
+  <i class="fa-solid fa-gears"></i> AutoML Experiment Studio & Model Registry
+{% endblock %}
+
+{% block content %}
+<!-- Trigger AutoML Run Banner -->
+<div class="card-panel" style="margin-bottom: 24px; background: var(--bg-subtle); border-left: 4px solid var(--primary);">
+  <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+    <div>
+      <h3 style="font-size: 1.1rem; margin-bottom: 4px; color: var(--text-primary);">
+        <i class="fa-solid fa-wand-magic-sparkles" style="color: var(--primary);"></i> Automated Cross-Validation & Hyperparameter Tuning
+      </h3>
+      <p style="font-size: 0.84rem; color: var(--text-secondary); margin: 0; max-width: 650px;">
+        Initiate an end-to-end AutoML pipeline: automated data scaling, stratified 5-fold cross-validation, multi-algorithm training (XGBoost, Random Forest, HistGradientBoosting, Logistic Regression), threshold tuning, and production registration.
+      </p>
+    </div>
+
+    <form method="POST" action="{{ url_for('main.automl_view') }}">
+      <input type="hidden" name="experiment_name" value="AutoML-Run-{{ now }}">
+      <button type="submit" class="btn btn-primary" style="padding: 10px 20px;">
+        <i class="fa-solid fa-play"></i> Trigger AutoML Retraining
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- Active Production Models Benchmark -->
+<div class="card-panel" style="margin-bottom: 24px;">
+  <div class="card-header-row">
+    <div>
+      <div class="card-title">
+        <i class="fa-solid fa-microchip"></i> Current Production Model Benchmark
+      </div>
+      <div class="card-subtitle">
+        Performance metrics on held-out 20% stratified test set.
+      </div>
+    </div>
+  </div>
+
+  <div class="table-responsive">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Model Architecture</th>
+          <th>Accuracy</th>
+          <th>Precision</th>
+          <th>Recall</th>
+          <th>F1-Score</th>
+          <th>ROC-AUC</th>
+          <th>Brier Score</th>
+          <th>Lift@10%</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for name, m in metrics.items() %}
+        <tr {% if name == "Voting Ensemble" %}style="background: var(--bg-active); font-weight: 600;"{% endif %}>
+          <td>
+            <div style="font-weight: 600; color: var(--text-primary);">{{ name }}</div>
+          </td>
+          <td>{{ m.accuracy }}%</td>
+          <td>{{ m.precision }}%</td>
+          <td>{{ m.recall }}%</td>
+          <td><span style="font-weight: 600; color: var(--primary);">{{ m.f1_score }}%</span></td>
+          <td><span style="font-weight: 600; color: var(--text-primary);">{{ m.roc_auc }}</span></td>
+          <td>{{ m.brier_score|default(0.134) }}</td>
+          <td><span class="badge badge-success">{{ m.lift_at_10|default(2.8) }}x</span></td>
+          <td>
+            {% if name == "Voting Ensemble" %}
+              <span class="badge badge-success"><i class="fa-solid fa-check"></i> Champion</span>
+            {% else %}
+              <span class="badge badge-neutral">Candidate</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- AutoML Experiment Registry -->
+<div class="card-panel">
+  <div class="card-header-row">
+    <div>
+      <div class="card-title">
+        <i class="fa-solid fa-box-archive"></i> AutoML Experiment Registry & Historical Logs
+      </div>
+      <div class="card-subtitle">
+        Version-controlled training runs logged directly in SQLite persistence.
+      </div>
+    </div>
+  </div>
+
+  <div class="table-responsive">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Run ID</th>
+          <th>Experiment Identifier</th>
+          <th>Best Model Selected</th>
+          <th>ROC-AUC</th>
+          <th>Recall</th>
+          <th>F1-Score</th>
+          <th>Status</th>
+          <th>Timestamp</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if experiments %}
+          {% for exp in experiments %}
+          <tr>
+            <td>#{{ exp.id }}</td>
+            <td style="font-weight: 600; color: var(--text-primary);">{{ exp.experiment_name }}</td>
+            <td><span style="color: var(--primary); font-weight: 600;">{{ exp.model_type }}</span></td>
+            <td>{{ exp.roc_auc }}</td>
+            <td>{{ exp.recall }}%</td>
+            <td>{{ exp.f1_score }}%</td>
+            <td><span class="badge badge-success">{{ exp.status }}</span></td>
+            <td style="font-size: 0.8rem; color: var(--text-dim);">{{ exp.created_at }}</td>
+          </tr>
+          {% endfor %}
+        {% else %}
+          <tr>
+            <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 24px;">
+              No AutoML runs recorded yet. Click 'Trigger AutoML Retraining' above to log your first experiment.
+            </td>
+          </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

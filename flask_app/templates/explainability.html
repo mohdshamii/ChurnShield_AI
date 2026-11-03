@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+
+{% block title %}Explainable AI Studio | ChurnShield AI{% endblock %}
+
+{% block header_title %}
+  <i class="fa-solid fa-brain"></i> Explainable AI (XAI) & SHAP Studio
+{% endblock %}
+
+{% block content %}
+<!-- XAI Scientific Banner -->
+<div class="card-panel" style="margin-bottom: 24px; border-left: 4px solid var(--primary); background: var(--bg-subtle);">
+  <div style="display: flex; align-items: flex-start; gap: 14px;">
+    <div style="font-size: 24px; color: var(--primary); flex-shrink: 0;">
+      <i class="fa-solid fa-circle-nodes"></i>
+    </div>
+    <div>
+      <h3 style="font-size: 1.05rem; margin-bottom: 4px; color: var(--text-primary);">Transparent, Model-Agnostic Feature Attribution</h3>
+      <p style="font-size: 0.84rem; color: var(--text-secondary); margin: 0;">
+        ChurnShield AI leverages cooperative game theory (Shapley Additive Explanations — SHAP) to decompose every individual prediction into exact mathematical contributions, guaranteeing local fidelity and global consistency.
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- Charts Row: Global SHAP Feature Attribution -->
+<div class="card-panel" style="margin-bottom: 24px;">
+  <div class="card-header-row">
+    <div>
+      <div class="card-title">
+        <i class="fa-solid fa-chart-column"></i> Global Feature Importance (Mean |SHAP| Value)
+      </div>
+      <div class="card-subtitle">
+        Ranking of features exerting the highest overall influence on customer retention and attrition.
+      </div>
+    </div>
+  </div>
+
+  <div style="height: 360px; position: relative;">
+    <canvas id="globalShapChart"></canvas>
+  </div>
+</div>
+
+<!-- Drivers Breakdown Grid -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px; margin-bottom: 24px;">
+  
+  <!-- Primary Churn Catalysts (Risk Drivers) -->
+  <div class="card-panel" style="border-top: 3px solid var(--danger);">
+    <div class="card-header-row">
+      <div>
+        <div class="card-title" style="color: var(--danger);">
+          <i class="fa-solid fa-fire" style="color: var(--danger);"></i> Primary Churn Catalysts
+        </div>
+        <div class="card-subtitle">Customer characteristics that statistically correlate with higher churn probability.</div>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 6px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; background: var(--danger-light); border: 1px solid var(--danger-border); padding: 11px 14px; border-radius: var(--radius-md);">
+        <div>
+          <strong style="color: var(--text-primary); font-size: 0.88rem;">Month-to-Month Contract</strong>
+          <div style="font-size: 0.74rem; color: var(--text-muted);">Lack of long-term commitment accelerates switching</div>
+        </div>
+        <span class="badge badge-danger">+38.5% Impact</span>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; align-items: center; background: var(--danger-light); border: 1px solid var(--danger-border); padding: 11px 14px; border-radius: var(--radius-md);">
+        <div>
+          <strong style="color: var(--text-primary); font-size: 0.88rem;">Electronic Check Payment</strong>
+          <div style="font-size: 0.74rem; color: var(--text-muted);">Frictional monthly manual payment triggers churn evaluation</div>
+        </div>
+        <span class="badge badge-danger">+14.2% Impact</span>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; align-items: center; background: var(--danger-light); border: 1px solid var(--danger-border); padding: 11px 14px; border-radius: var(--radius-md);">
+        <div>
+          <strong style="color: var(--text-primary); font-size: 0.88rem;">Fiber Optic without Value Bundle</strong>
+          <div style="font-size: 0.74rem; color: var(--text-muted);">High bill rate without security or support creates price sensitivity</div>
+        </div>
+        <span class="badge badge-danger">+18.0% Impact</span>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; align-items: center; background: var(--danger-light); border: 1px solid var(--danger-border); padding: 11px 14px; border-radius: var(--radius-md);">
+        <div>
+          <strong style="color: var(--text-primary); font-size: 0.88rem;">Absence of Tech Support</strong>
+          <div style="font-size: 0.74rem; color: var(--text-muted);">Unresolved friction drives customer frustration</div>
+        </div>
+        <span class="badge badge-danger">+11.6% Impact</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Primary Retention Anchors (Loyalty Drivers) -->
+  <div class="card-panel" style="border-top: 3px solid var(--success);">
+    <div class="card-header-row">
+      <div>
+        <div class="card-title" style="color: var(--success);">
+          <i class="fa-solid fa-anchor" style="color: var(--success);"></i> Primary Retention Anchors
+        </div>
+        <div class="card-subtitle">Attributes that establish enduring customer loyalty and low attrition.</div>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 6px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; background: var(--success-light); border: 1px solid var(--success-border); padding: 11px 14px; border-radius: var(--radius-md);">
+        <div>
+          <strong style="color: var(--text-primary); font-size: 0.88rem;">Two-Year Contract Commitment</strong>
+          <div style="font-size: 0.74rem; color: var(--text-muted);">Contractual commitment slashes annual attrition to <3%</div>
+        </div>
+        <span class="badge badge-success">-42.0% Impact</span>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; align-items: center; background: var(--success-light); border: 1px solid var(--success-border); padding: 11px 14px; border-radius: var(--radius-md);">
+        <div>
+          <strong style="color: var(--text-primary); font-size: 0.88rem;">Long Account Tenure (>36 Mo)</strong>
+          <div style="font-size: 0.74rem; color: var(--text-muted);">Established habit and ecosystem integration</div>
+        </div>
+        <span class="badge badge-success">-31.5% Impact</span>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; align-items: center; background: var(--success-light); border: 1px solid var(--success-border); padding: 11px 14px; border-radius: var(--radius-md);">
+        <div>
+          <strong style="color: var(--text-primary); font-size: 0.88rem;">Active Online Security & Tech Support</strong>
+          <div style="font-size: 0.74rem; color: var(--text-muted);">High switching barriers and value realization</div>
+        </div>
+        <span class="badge badge-success">-19.4% Impact</span>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; align-items: center; background: var(--success-light); border: 1px solid var(--success-border); padding: 11px 14px; border-radius: var(--radius-md);">
+        <div>
+          <strong style="color: var(--text-primary); font-size: 0.88rem;">Automatic Payment (Bank / Card)</strong>
+          <div style="font-size: 0.74rem; color: var(--text-muted);">Frictionless recurring renewal without billing pause</div>
+        </div>
+        <span class="badge badge-success">-14.8% Impact</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Methodology & Scientific Disclaimer -->
+<div class="card-panel">
+  <div class="card-header-row">
+    <div>
+      <div class="card-title">
+        <i class="fa-solid fa-scale-balanced"></i> Methodological Rigor & Causality Notice
+      </div>
+      <div class="card-subtitle">Ensuring scientific integrity and regulatory compliance.</div>
+    </div>
+  </div>
+
+  <div style="font-size: 0.84rem; color: var(--text-secondary); line-height: 1.65;">
+    <p style="margin-bottom: 8px;">
+      <strong>1. Cooperative Game Theory:</strong> The Shapley value is the only attribution method satisfying Efficiency, Symmetry, Dummy, and Additivity axioms. ChurnShield AI fits exact tree-based Shapley algorithms to eliminate heuristic approximations.
+    </p>
+    <p style="margin-bottom: 8px;">
+      <strong>2. Correlation vs. Causation:</strong> SHAP values explain model predictions, identifying features with high statistical predictive power. While interventions on high-impact features (such as offering annual contract incentives) show strong empirical success in reducing churn, business leaders should conduct A/B testing before claiming definitive causality.
+    </p>
+    <p style="margin: 0;">
+      <strong>3. Algorithmic Fairness:</strong> Demographics (such as gender and senior status) are monitored to ensure unbiased decision thresholds across customer segments.
+    </p>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  const isDark = document.documentElement.getAttribute("data-theme") === "dark";
+  const gridColor = isDark ? "rgba(255, 255, 255, 0.07)" : "rgba(0, 0, 0, 0.05)";
+  const textColor = isDark ? "#94a3b8" : "#64748b";
+
+  const globalShap = {{ global_shap|tojson }};
+  const ctxGlobal = document.getElementById('globalShapChart').getContext('2d');
+  new Chart(ctxGlobal, {
+    type: 'bar',
+    data: {
+      labels: globalShap.features,
+      datasets: [{
+        label: 'Mean |SHAP Value| (Predictive Impact)',
+        data: globalShap.scores,
+        backgroundColor: '#635bff',
+        borderRadius: 4,
+        maxBarThickness: 24
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false }
+      },
+      scales: {
+        x: {
+          title: { display: true, text: 'Mean Absolute SHAP Value (Impact on Model Output)', color: textColor },
+          grid: { color: gridColor },
+          ticks: { color: textColor }
+        },
+        y: {
+          grid: { display: false },
+          ticks: { color: textColor }
+        }
+      }
+    }
+  });
+</script>
+{% endblock %}

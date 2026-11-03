@@ -14,6 +14,8 @@ def create_app():
     
     app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "churnshield-ai-production-secret-key-2026")
     app.config["MAX_CONTENT_LENGTH"] = 32 * 1024 * 1024  # 32MB max batch upload
+    app.config["TEMPLATES_AUTO_RELOAD"] = True
+    app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 0
 
     # Register blueprints / routes
     from flask_app.routes import main_bp

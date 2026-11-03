@@ -1,0 +1,210 @@
+{% extends "base.html" %}
+
+{% block title %}Revenue Intelligence & CLV | ChurnShield AI{% endblock %}
+
+{% block header_title %}
+  <i class="fa-solid fa-coins"></i> Revenue Intelligence & Financial Preservation
+{% endblock %}
+
+{% block content %}
+<!-- Financial Overview KPIs -->
+<div class="kpi-grid">
+  <div class="kpi-card">
+    <div>
+      <div class="kpi-label">Monthly Run-Rate (MRR)</div>
+      <div class="kpi-value">${{ "{:,.0f}".format(monthly_rev) }}</div>
+    </div>
+    <div class="kpi-subtext">
+      <i class="fa-solid fa-chart-line" style="color: var(--primary);"></i> Current Active Subscriptions
+    </div>
+  </div>
+
+  <div class="kpi-card">
+    <div>
+      <div class="kpi-label">Annual Portfolio Revenue</div>
+      <div class="kpi-value">${{ "{:,.0f}".format(annual_rev) }}</div>
+    </div>
+    <div class="kpi-subtext">
+      <i class="fa-solid fa-calendar" style="color: var(--primary);"></i> Total ARR Baseline
+    </div>
+  </div>
+
+  <div class="kpi-card">
+    <div>
+      <div class="kpi-label">Annual Revenue At Risk</div>
+      <div class="kpi-value" style="color: var(--danger);">${{ "{:,.0f}".format(annual_rev_at_risk) }}</div>
+    </div>
+    <div class="kpi-subtext">
+      <span class="badge badge-danger">High Exposure</span>
+      <span>Projected churn run-rate</span>
+    </div>
+  </div>
+
+  <div class="kpi-card">
+    <div>
+      <div class="kpi-label">Preservable CLV Capital</div>
+      <div class="kpi-value" style="color: var(--success);">${{ "{:,.0f}".format(annual_rev_at_risk * 0.6) }}</div>
+    </div>
+    <div class="kpi-subtext">
+      <span class="badge badge-success">60% Targeted</span>
+      <span>Recovery baseline</span>
+    </div>
+  </div>
+</div>
+
+<!-- 30 / 60 / 90 Day Projections -->
+<div class="card-panel" style="margin-bottom: 24px;">
+  <div class="card-header-row">
+    <div>
+      <div class="card-title">
+        <i class="fa-solid fa-forward-step"></i> 30 / 60 / 90-Day Churn & Revenue Exposure Projections
+      </div>
+      <div class="card-subtitle">
+        Empirical forward-looking risk forecast based on contract velocity and cohort survival modeling.
+      </div>
+    </div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px;">
+    <!-- 30 Days -->
+    <div style="background: var(--bg-subtle); border: 1px solid var(--border-color); border-top: 3px solid var(--warning); padding: 18px; border-radius: var(--radius-md);">
+      <div style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">30-Day Outlook</div>
+      <div style="font-size: 1.6rem; font-weight: 800; color: var(--text-primary); margin: 6px 0; font-family: 'Outfit', sans-serif;">
+        {{ forecast.forecast_30_days.churn_count }} <span style="font-size: 0.82rem; color: var(--text-muted); font-weight: normal;">Accounts</span>
+      </div>
+      <div style="font-size: 0.85rem; color: var(--danger); font-weight: 700;">
+        ${{ "{:,.0f}".format(forecast.forecast_30_days.annual_revenue_at_risk) }} ARR at Risk
+      </div>
+      <div style="font-size: 0.74rem; color: var(--text-dim); margin-top: 6px;">
+        Immediate month-to-month renewals window
+      </div>
+    </div>
+
+    <!-- 60 Days -->
+    <div style="background: var(--bg-subtle); border: 1px solid var(--border-color); border-top: 3px solid var(--secondary); padding: 18px; border-radius: var(--radius-md);">
+      <div style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">60-Day Outlook</div>
+      <div style="font-size: 1.6rem; font-weight: 800; color: var(--text-primary); margin: 6px 0; font-family: 'Outfit', sans-serif;">
+        {{ forecast.forecast_60_days.churn_count }} <span style="font-size: 0.82rem; color: var(--text-muted); font-weight: normal;">Accounts</span>
+      </div>
+      <div style="font-size: 0.85rem; color: var(--danger); font-weight: 700;">
+        ${{ "{:,.0f}".format(forecast.forecast_60_days.annual_revenue_at_risk) }} ARR at Risk
+      </div>
+      <div style="font-size: 0.74rem; color: var(--text-dim); margin-top: 6px;">
+        Mid-term contract expiration horizon
+      </div>
+    </div>
+
+    <!-- 90 Days -->
+    <div style="background: var(--bg-subtle); border: 1px solid var(--border-color); border-top: 3px solid var(--danger); padding: 18px; border-radius: var(--radius-md);">
+      <div style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">90-Day Outlook</div>
+      <div style="font-size: 1.6rem; font-weight: 800; color: var(--text-primary); margin: 6px 0; font-family: 'Outfit', sans-serif;">
+        {{ forecast.forecast_90_days.churn_count }} <span style="font-size: 0.82rem; color: var(--text-muted); font-weight: normal;">Accounts</span>
+      </div>
+      <div style="font-size: 0.85rem; color: var(--danger); font-weight: 700;">
+        ${{ "{:,.0f}".format(forecast.forecast_90_days.annual_revenue_at_risk) }} ARR at Risk
+      </div>
+      <div style="font-size: 0.74rem; color: var(--text-dim); margin-top: 6px;">
+        Quarterly cumulative attrition cumulative
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Interactive Financial ROI Calculator -->
+<div class="card-panel">
+  <div class="card-header-row">
+    <div>
+      <div class="card-title">
+        <i class="fa-solid fa-calculator"></i> Interactive Campaign Retention ROI Simulator
+      </div>
+      <div class="card-subtitle">
+        Adjust targeted customers, monthly discount, and expected retention rate to simulate return on investment.
+      </div>
+    </div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px; align-items: center;">
+    <div>
+      <div class="form-group" style="margin-bottom: 16px;">
+        <label class="form-label">Target Customer Population (<span id="popVal">500</span> accounts)</label>
+        <input type="range" class="form-control" id="targetPop" min="50" max="2000" step="50" value="500">
+      </div>
+
+      <div class="form-group" style="margin-bottom: 16px;">
+        <label class="form-label">Average Monthly Bill ($<span id="billVal">85</span>/mo)</label>
+        <input type="range" class="form-control" id="avgBill" min="30" max="130" step="5" value="85">
+      </div>
+
+      <div class="form-group" style="margin-bottom: 16px;">
+        <label class="form-label">Promotional Discount (<span id="discVal">20</span>%) for 6 Months</label>
+        <input type="range" class="form-control" id="promoDisc" min="5" max="40" step="5" value="20">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Expected Retention Success Rate (<span id="succVal">60</span>%)</label>
+        <input type="range" class="form-control" id="succRate" min="20" max="90" step="5" value="60">
+      </div>
+    </div>
+
+    <!-- Output Box -->
+    <div style="background: var(--bg-subtle); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 20px;">
+      <h4 style="margin-bottom: 14px; font-size: 0.95rem; color: var(--text-primary);">
+        <i class="fa-solid fa-chart-line" style="color: var(--primary);"></i> Projected Financial Impact
+      </h4>
+
+      <div style="display: flex; justify-content: space-between; margin-bottom: 10px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
+        <span style="color: var(--text-muted); font-size: 0.84rem;">Total Campaign Spend:</span>
+        <strong id="totalCost" style="color: var(--warning);">$51,000</strong>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; margin-bottom: 10px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
+        <span style="color: var(--text-muted); font-size: 0.84rem;">Retained Annual Revenue:</span>
+        <strong id="savedRev" style="color: var(--success);">$306,000</strong>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; margin-bottom: 10px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
+        <span style="color: var(--text-muted); font-size: 0.84rem;">Net Value Preserved:</span>
+        <strong id="netPreserved" style="color: var(--text-primary); font-size: 1.05rem;">$255,000</strong>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 6px;">
+        <span style="color: var(--text-muted); font-weight: 600; font-size: 0.84rem;">Campaign ROI Multiple:</span>
+        <span id="roiMultiple" class="badge badge-success" style="font-size: 0.95rem; padding: 5px 12px;">500% ROI (5.0x)</span>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  function updateROI() {
+    const pop = parseFloat(document.getElementById('targetPop').value);
+    const bill = parseFloat(document.getElementById('avgBill').value);
+    const disc = parseFloat(document.getElementById('promoDisc').value) / 100.0;
+    const succ = parseFloat(document.getElementById('succRate').value) / 100.0;
+
+    document.getElementById('popVal').innerText = pop;
+    document.getElementById('billVal').innerText = bill;
+    document.getElementById('discVal').innerText = (disc * 100).toFixed(0);
+    document.getElementById('succVal').innerText = (succ * 100).toFixed(0);
+
+    const cost = pop * bill * disc * 6;
+    const saved = pop * succ * bill * 12;
+    const net = saved - cost;
+    const roi = (net / Math.max(cost, 1)) * 100;
+    const multiple = (saved / Math.max(cost, 1)).toFixed(1);
+
+    document.getElementById('totalCost').innerText = '$' + cost.toLocaleString(undefined, {maximumFractionDigits: 0});
+    document.getElementById('savedRev').innerText = '$' + saved.toLocaleString(undefined, {maximumFractionDigits: 0});
+    document.getElementById('netPreserved').innerText = '$' + net.toLocaleString(undefined, {maximumFractionDigits: 0});
+    document.getElementById('roiMultiple').innerText = roi.toFixed(0) + '% ROI (' + multiple + 'x)';
+  }
+
+  document.getElementById('targetPop').addEventListener('input', updateROI);
+  document.getElementById('avgBill').addEventListener('input', updateROI);
+  document.getElementById('promoDisc').addEventListener('input', updateROI);
+  document.getElementById('succRate').addEventListener('input', updateROI);
+  updateROI();
+</script>
+{% endblock %}
