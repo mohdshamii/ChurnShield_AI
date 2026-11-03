@@ -1,46 +1,151 @@
 {% extends "base.html" %}
 
-{% block title %}Retention Strategy & CLV ROI Simulator | ChurnShield AI{% endblock %}
+{% block title %}Retention Strategy & Campaign Studio | ChurnShield AI{% endblock %}
 
 {% block header_title %}
-  <i class="fa-solid fa-hand-holding-dollar" style="color: var(--primary);"></i> Customer Retention & Lifetime Value (CLV) ROI Hub
+  <i class="fa-solid fa-hand-holding-dollar"></i> Retention Campaign Studio & Lifetime Value (CLV) ROI Hub
 {% endblock %}
 
 {% block content %}
-<!-- Interactive Financial ROI Simulator -->
-<div class="card-panel" style="margin-bottom: 28px;">
+<!-- Create New Campaign & Active Campaigns Studio -->
+<div class="card-panel" style="margin-bottom: 24px;">
   <div class="card-header-row">
     <div>
       <div class="card-title">
-        <i class="fa-solid fa-calculator" style="color: var(--primary);"></i> Interactive Retention Campaign Financial Simulator
+        <i class="fa-solid fa-bullhorn"></i> Active Retention Programs & Campaigns
+      </div>
+      <div class="card-subtitle">Manage automated intervention programs and track preserved revenue.</div>
+    </div>
+    <button type="button" class="btn btn-primary btn-sm" onclick="document.getElementById('campaignFormRow').style.display = document.getElementById('campaignFormRow').style.display === 'none' ? 'block' : 'none';">
+      <i class="fa-solid fa-plus"></i> New Campaign
+    </button>
+  </div>
+
+  <!-- New Campaign Collapsible Form -->
+  <div id="campaignFormRow" style="display: none; background: var(--bg-subtle); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 18px; margin-bottom: 18px;">
+    <h4 style="font-size: 0.95rem; margin-bottom: 12px; color: var(--text-primary);">
+      <i class="fa-solid fa-wand-magic-sparkles" style="color: var(--primary);"></i> Configure Retention Campaign
+    </h4>
+    <form method="POST" action="{{ url_for('main.retention_view') }}">
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+        <div class="form-group">
+          <label class="form-label">Campaign Title</label>
+          <input type="text" name="campaign_name" class="form-control" placeholder="e.g. Q4 At-Risk Win-Back" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Target Risk Tier</label>
+          <select name="target_risk" class="form-select">
+            <option value="HIGH" selected>High Risk (>65%)</option>
+            <option value="MEDIUM">Medium Risk (35-65%)</option>
+            <option value="ALL">All Segments</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Incentive / Offer</label>
+          <input type="text" name="offer_name" class="form-control" placeholder="e.g. Free Speed Upgrade" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Discount Rate (%)</label>
+          <input type="number" name="discount_pct" class="form-control" value="20" min="5" max="50">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Budget Allocation ($)</label>
+          <input type="number" name="budget" class="form-control" value="6000" min="500">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Audience Size</label>
+          <input type="number" name="customers_targeted" class="form-control" value="150" min="10">
+        </div>
+      </div>
+      <div style="margin-top: 14px; text-align: right;">
+        <button type="submit" class="btn btn-primary btn-sm">
+          <i class="fa-solid fa-paper-plane"></i> Deploy Campaign
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Campaigns Table -->
+  <div class="table-responsive">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Campaign Name</th>
+          <th>Target Tier</th>
+          <th>Offer Applied</th>
+          <th>Targeted</th>
+          <th>Retained</th>
+          <th>Budget</th>
+          <th>Revenue Saved</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if campaigns %}
+          {% for c in campaigns %}
+          <tr>
+            <td><strong style="color: var(--text-primary);">{{ c.name }}</strong></td>
+            <td>
+              <span class="badge {% if c.target_risk_level == 'HIGH' %}badge-danger{% else %}badge-warning{% endif %}">
+                {{ c.target_risk_level }}
+              </span>
+            </td>
+            <td>{{ c.offer_name }} ({{ c.discount_pct }}%)</td>
+            <td>{{ c.customers_targeted }}</td>
+            <td><span style="color: var(--success); font-weight: 700;">{{ c.retained_count }}</span></td>
+            <td>${{ "{:,.0f}".format(c.budget) }}</td>
+            <td style="color: var(--primary); font-weight: 700;">${{ "{:,.0f}".format(c.revenue_saved) }}</td>
+            <td>
+              <span class="badge badge-success">{{ c.status }}</span>
+            </td>
+          </tr>
+          {% endfor %}
+        {% else %}
+          <tr>
+            <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 24px;">
+              No campaigns active. Deploy a new campaign above.
+            </td>
+          </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Interactive Financial ROI Simulator -->
+<div class="card-panel" style="margin-bottom: 24px;">
+  <div class="card-header-row">
+    <div>
+      <div class="card-title">
+        <i class="fa-solid fa-calculator"></i> Interactive Retention Campaign Financial Simulator
       </div>
       <div class="card-subtitle">Model the financial return on investment of targeted retention interventions.</div>
     </div>
     <span class="badge badge-success">FINANCIAL MODEL</span>
   </div>
 
-  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px;">
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px;">
     <!-- Inputs Column -->
-    <div style="background: rgba(15, 23, 42, 0.7); padding: 20px; border-radius: 12px; border: 1px solid var(--border-subtle);">
-      <h4 style="color: #fff; margin-bottom: 16px; font-size: 1rem;">Simulation Parameters</h4>
+    <div style="background: var(--bg-subtle); padding: 18px; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+      <h4 style="margin-bottom: 14px; font-size: 0.95rem; color: var(--text-primary);">Simulation Parameters</h4>
       
       <div class="form-group">
-        <label class="form-label">Target Cohort Size (At-Risk Customers): <span id="val-cohort" style="color: var(--primary); font-weight: 700;">500</span></label>
+        <label class="form-label">Target Cohort Size: <span id="val-cohort" style="color: var(--primary); font-weight: 700;">500</span></label>
         <input type="range" id="input-cohort" class="form-control" min="50" max="2000" step="25" value="500">
       </div>
 
       <div class="form-group">
-        <label class="form-label">Average Monthly ARPU ($): <span id="val-arpu" style="color: var(--primary); font-weight: 700;">$75</span></label>
+        <label class="form-label">Average Monthly ARPU: <span id="val-arpu" style="color: var(--primary); font-weight: 700;">$75</span></label>
         <input type="range" id="input-arpu" class="form-control" min="20" max="150" step="5" value="75">
       </div>
 
       <div class="form-group">
-        <label class="form-label">Retention Incentive Spend ($ per customer): <span id="val-spend" style="color: var(--primary); font-weight: 700;">$60</span></label>
+        <label class="form-label">Incentive Spend ($/customer): <span id="val-spend" style="color: var(--primary); font-weight: 700;">$60</span></label>
         <input type="range" id="input-spend" class="form-control" min="10" max="250" step="5" value="60">
       </div>
 
       <div class="form-group">
-        <label class="form-label">Intervention Success Rate (%): <span id="val-success" style="color: var(--primary); font-weight: 700;">60%</span></label>
+        <label class="form-label">Success Rate: <span id="val-success" style="color: var(--primary); font-weight: 700;">60%</span></label>
         <input type="range" id="input-success" class="form-control" min="20" max="90" step="5" value="60">
       </div>
     </div>
@@ -48,33 +153,33 @@
     <!-- Outputs Column -->
     <div style="display: flex; flex-direction: column; justify-content: space-between; gap: 14px;">
       <div class="kpi-grid" style="margin-bottom: 0;">
-        <div class="kpi-card" style="padding: 16px 20px;">
+        <div class="kpi-card" style="padding: 14px 18px;">
           <div class="kpi-label">Campaign Budget</div>
-          <div class="kpi-value" id="res-budget" style="font-size: 1.6rem; color: #fff;">$30,000</div>
+          <div class="kpi-value" id="res-budget" style="font-size: 1.45rem;">$30,000</div>
           <div class="kpi-subtext">Total incentive spend</div>
         </div>
 
-        <div class="kpi-card" style="padding: 16px 20px;">
+        <div class="kpi-card" style="padding: 14px 18px;">
           <div class="kpi-label">Accounts Saved</div>
-          <div class="kpi-value" id="res-saved-count" style="font-size: 1.6rem; color: var(--secondary);">300</div>
+          <div class="kpi-value" id="res-saved-count" style="font-size: 1.45rem; color: var(--primary);">300</div>
           <div class="kpi-subtext">Retained subscribers</div>
         </div>
 
-        <div class="kpi-card" style="padding: 16px 20px;">
+        <div class="kpi-card" style="padding: 14px 18px;">
           <div class="kpi-label">Gross Revenue Preserved</div>
-          <div class="kpi-value" id="res-gross" style="font-size: 1.6rem; color: var(--primary);">$270,000</div>
+          <div class="kpi-value" id="res-gross" style="font-size: 1.45rem; color: var(--success);">$270,000</div>
           <div class="kpi-subtext">Annualized recurring run-rate</div>
         </div>
 
-        <div class="kpi-card" style="padding: 16px 20px;">
+        <div class="kpi-card" style="padding: 14px 18px;">
           <div class="kpi-label">Net Campaign ROI</div>
-          <div class="kpi-value" id="res-roi" style="font-size: 1.6rem; color: #00ffaa;">+800%</div>
+          <div class="kpi-value" id="res-roi" style="font-size: 1.45rem; color: var(--success);">+800%</div>
           <div class="kpi-subtext">Net Value / Campaign Cost</div>
         </div>
       </div>
 
-      <div style="background: rgba(0, 255, 170, 0.08); border: 1px solid var(--border-glass); border-radius: 10px; padding: 14px 18px; font-size: 0.85rem; color: #cbd5e1;">
-        <i class="fa-solid fa-chart-line" style="color: var(--primary); margin-right: 6px;"></i>
+      <div style="background: var(--success-light); border: 1px solid var(--success-border); border-radius: var(--radius-md); padding: 12px 16px; font-size: 0.82rem; color: var(--success-text);">
+        <i class="fa-solid fa-chart-line" style="color: var(--success); margin-right: 6px;"></i>
         <strong>Key Takeaway:</strong> Proactive AI-driven retention yields immense economic return compared to new acquisition (average CAC is 5x-7x higher than retention incentive cost).
       </div>
     </div>
@@ -82,7 +187,7 @@
 </div>
 
 <!-- Risk Tier Strategic Playbooks -->
-<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px; margin-bottom: 28px;">
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
   <!-- High Risk Playbook -->
   <div class="card-panel" style="border-top: 3px solid var(--danger);">
     <div class="card-header-row">
@@ -91,11 +196,11 @@
       </div>
       <span class="badge badge-danger">PROB &gt; 65%</span>
     </div>
-    <ul style="list-style: none; padding-left: 0; font-size: 0.86rem; color: #cbd5e1; display: flex; flex-direction: column; gap: 10px;">
-      <li><strong style="color: #fff;">Outreach Speed:</strong> Within 4 hours of threshold breach.</li>
-      <li><strong style="color: #fff;">Incentive:</strong> 15% discount for 6 months on 1-year contract lock.</li>
-      <li><strong style="color: #fff;">Escalation:</strong> Route directly to Level 2 Retention Specialist.</li>
-      <li><strong style="color: #fff;">Free Bundle:</strong> 90-day complimentary Tech Support & Cyber Shield.</li>
+    <ul style="list-style: none; padding-left: 0; font-size: 0.84rem; color: var(--text-secondary); display: flex; flex-direction: column; gap: 8px;">
+      <li><strong style="color: var(--text-primary);">Outreach Speed:</strong> Within 4 hours of threshold breach.</li>
+      <li><strong style="color: var(--text-primary);">Incentive:</strong> 15% discount for 6 months on 1-year contract lock.</li>
+      <li><strong style="color: var(--text-primary);">Escalation:</strong> Route directly to Level 2 Retention Specialist.</li>
+      <li><strong style="color: var(--text-primary);">Free Bundle:</strong> 90-day complimentary Tech Support & Cyber Shield.</li>
     </ul>
   </div>
 
@@ -107,27 +212,27 @@
       </div>
       <span class="badge badge-warning">PROB 35% - 65%</span>
     </div>
-    <ul style="list-style: none; padding-left: 0; font-size: 0.86rem; color: #cbd5e1; display: flex; flex-direction: column; gap: 10px;">
-      <li><strong style="color: #fff;">Outreach Speed:</strong> Within 3 business days.</li>
-      <li><strong style="color: #fff;">Incentive:</strong> $25 bill credit for activating Auto-Pay.</li>
-      <li><strong style="color: #fff;">Engagement:</strong> Trigger targeted satisfaction survey.</li>
-      <li><strong style="color: #fff;">Feature Adoption:</strong> Nurture emails highlighting unused bundle tools.</li>
+    <ul style="list-style: none; padding-left: 0; font-size: 0.84rem; color: var(--text-secondary); display: flex; flex-direction: column; gap: 8px;">
+      <li><strong style="color: var(--text-primary);">Outreach Speed:</strong> Within 3 business days.</li>
+      <li><strong style="color: var(--text-primary);">Incentive:</strong> $25 bill credit for activating Auto-Pay.</li>
+      <li><strong style="color: var(--text-primary);">Engagement:</strong> Trigger targeted satisfaction survey.</li>
+      <li><strong style="color: var(--text-primary);">Feature Adoption:</strong> Nurture emails highlighting unused bundle tools.</li>
     </ul>
   </div>
 
   <!-- Low Risk Playbook -->
-  <div class="card-panel" style="border-top: 3px solid var(--primary);">
+  <div class="card-panel" style="border-top: 3px solid var(--success);">
     <div class="card-header-row">
       <div class="card-title">
-        <i class="fa-solid fa-crown" style="color: var(--primary);"></i> Low-Risk Protocol
+        <i class="fa-solid fa-crown" style="color: var(--success);"></i> Low-Risk Protocol
       </div>
       <span class="badge badge-success">PROB &lt; 35%</span>
     </div>
-    <ul style="list-style: none; padding-left: 0; font-size: 0.86rem; color: #cbd5e1; display: flex; flex-direction: column; gap: 10px;">
-      <li><strong style="color: #fff;">Cadence:</strong> Quarterly Value Realization summary.</li>
-      <li><strong style="color: #fff;">Loyalty Rewards:</strong> Annual tenure anniversary recognition.</li>
-      <li><strong style="color: #fff;">Expansion:</strong> Cross-sell Streaming & Device Protection packages.</li>
-      <li><strong style="color: #fff;">Advocacy:</strong> Invite to Customer Advisory Board and referral program.</li>
+    <ul style="list-style: none; padding-left: 0; font-size: 0.84rem; color: var(--text-secondary); display: flex; flex-direction: column; gap: 8px;">
+      <li><strong style="color: var(--text-primary);">Cadence:</strong> Quarterly Value Realization summary.</li>
+      <li><strong style="color: var(--text-primary);">Loyalty Rewards:</strong> Annual tenure anniversary recognition.</li>
+      <li><strong style="color: var(--text-primary);">Expansion:</strong> Cross-sell Streaming & Device Protection packages.</li>
+      <li><strong style="color: var(--text-primary);">Advocacy:</strong> Invite to Customer Advisory Board and referral program.</li>
     </ul>
   </div>
 </div>

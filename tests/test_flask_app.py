@@ -126,5 +126,10 @@ class TestFlaskApp(unittest.TestCase):
         del_data = json.loads(del_res.data)
         self.assertTrue(del_data['success'])
 
+    def test_root_app_is_flask_instance(self):
+        import app as root_app
+        from flask import Flask
+        self.assertIsInstance(root_app.app, Flask)
+
 if __name__ == '__main__':
     unittest.main()

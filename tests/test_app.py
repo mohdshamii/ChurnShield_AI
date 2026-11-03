@@ -100,7 +100,7 @@ class TestContractTypeEncoding:
     def test_two_year_encoding(self):
         """Two year contract should significantly decrease risk"""
         contract_impact = -0.15
-        assert contract_impact < contract_impact
+        assert contract_impact < 0
 
     def test_contract_type_validation(self, contract_types):
         """All contract types should be valid"""

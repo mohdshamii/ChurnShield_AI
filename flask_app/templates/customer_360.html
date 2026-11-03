@@ -1,0 +1,251 @@
+{% extends "base.html" %}
+
+{% block title %}Customer 360 — {{ customer_id }} | ChurnShield AI{% endblock %}
+
+{% block header_title %}
+  <i class="fa-solid fa-user-gear"></i> Customer 360 Intelligence: <span style="margin-left: 8px;">{{ customer_id }}</span>
+{% endblock %}
+
+{% block content %}
+<!-- Quick Breadcrumb & Header Action -->
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
+  <div style="font-size: 0.88rem; color: var(--text-muted);">
+    <a href="{{ url_for('main.analytics_view') }}" style="font-weight: 500;">
+      <i class="fa-solid fa-arrow-left"></i> Back to Risk Analytics
+    </a>
+    <span style="margin: 0 8px; color: var(--border-color);">/</span>
+    <span>Account Dossier</span>
+  </div>
+  <div>
+    <span class="badge {{ risk_assessment.badge_class }}" style="font-size: 0.82rem; padding: 6px 12px;">
+      {{ churn_prob }}% Churn Risk ({{ risk_assessment.level }})
+    </span>
+  </div>
+</div>
+
+<!-- Grid: Profile Card on Left, Prediction & Financials on Right -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 20px; margin-bottom: 24px;">
+  
+  <!-- Left Panel: Customer Attributes -->
+  <div class="card-panel">
+    <div class="card-header-row">
+      <div>
+        <div class="card-title">
+          <i class="fa-solid fa-address-card"></i> Customer Profile & Contract
+        </div>
+        <div class="card-subtitle">Demographics, subscription parameters, and service configuration.</div>
+      </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 6px;">
+      <div>
+        <div style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Customer ID</div>
+        <div style="font-weight: 700; color: var(--text-primary);">{{ customer_id }}</div>
+      </div>
+      <div>
+        <div style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Account Tenure</div>
+        <div style="font-weight: 700; color: var(--primary);">{{ customer.tenure }} Months</div>
+      </div>
+      <div>
+        <div style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Contract Commitment</div>
+        <div style="font-weight: 600; color: {% if customer.Contract == 'Month-to-month' %}var(--danger){% else %}var(--success){% endif %};">
+          {{ customer.Contract }}
+        </div>
+      </div>
+      <div>
+        <div style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Monthly Billing</div>
+        <div style="font-weight: 700; color: var(--text-primary);">${{ customer.MonthlyCharges }}</div>
+      </div>
+      <div>
+        <div style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Internet Infrastructure</div>
+        <div style="font-weight: 600; color: var(--text-primary);">{{ customer.InternetService }}</div>
+      </div>
+      <div>
+        <div style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Payment Channel</div>
+        <div style="font-weight: 600; color: var(--text-primary);">{{ customer.PaymentMethod }}</div>
+      </div>
+      <div>
+        <div style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Online Security</div>
+        <div style="font-weight: 600; color: {% if customer.OnlineSecurity == 'Yes' %}var(--success){% else %}var(--warning){% endif %};">
+          {{ customer.OnlineSecurity|default('No') }}
+        </div>
+      </div>
+      <div>
+        <div style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Technical Support</div>
+        <div style="font-weight: 600; color: {% if customer.TechSupport == 'Yes' %}var(--success){% else %}var(--warning){% endif %};">
+          {{ customer.TechSupport|default('No') }}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right Panel: Financial Impact & CLV Preservation -->
+  <div class="card-panel">
+    <div class="card-header-row">
+      <div>
+        <div class="card-title">
+          <i class="fa-solid fa-sack-dollar"></i> Financial Exposure & CLV Valuation
+        </div>
+        <div class="card-subtitle">Quantified retention economics and potential capital preservation.</div>
+      </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 6px;">
+      <div style="background: var(--danger-light); border: 1px solid var(--danger-border); padding: 12px 14px; border-radius: var(--radius-md);">
+        <div style="font-size: 0.72rem; color: var(--danger-text); text-transform: uppercase; font-weight: 700;">Annual Revenue At Risk</div>
+        <div style="font-size: 1.35rem; font-weight: 800; color: var(--danger); margin-top: 3px; font-family: 'Outfit', sans-serif;">
+          ${{ "{:,.2f}".format(clv_roi.revenue_at_risk) }}
+        </div>
+      </div>
+
+      <div style="background: var(--success-light); border: 1px solid var(--success-border); padding: 12px 14px; border-radius: var(--radius-md);">
+        <div style="font-size: 0.72rem; color: var(--success-text); text-transform: uppercase; font-weight: 700;">Projected Lifetime Value</div>
+        <div style="font-size: 1.35rem; font-weight: 800; color: var(--success); margin-top: 3px; font-family: 'Outfit', sans-serif;">
+          ${{ "{:,.2f}".format(clv_roi.projected_clv) }}
+        </div>
+      </div>
+
+      <div style="background: var(--primary-light); border: 1px solid var(--primary-border); padding: 12px 14px; border-radius: var(--radius-md);">
+        <div style="font-size: 0.72rem; color: var(--primary); text-transform: uppercase; font-weight: 700;">Intervention Budget</div>
+        <div style="font-size: 1.2rem; font-weight: 800; color: var(--primary); margin-top: 3px; font-family: 'Outfit', sans-serif;">
+          ${{ "{:,.2f}".format(clv_roi.intervention_cost) }}
+        </div>
+      </div>
+
+      <div style="background: var(--warning-light); border: 1px solid var(--warning-border); padding: 12px 14px; border-radius: var(--radius-md);">
+        <div style="font-size: 0.72rem; color: var(--warning-text); text-transform: uppercase; font-weight: 700;">Projected ROI</div>
+        <div style="font-size: 1.2rem; font-weight: 800; color: var(--warning); margin-top: 3px; font-family: 'Outfit', sans-serif;">
+          +{{ clv_roi.retention_roi_percent }}%
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SHAP Waterfall Feature Attribution -->
+<div class="card-panel" style="margin-bottom: 24px;">
+  <div class="card-header-row">
+    <div>
+      <div class="card-title">
+        <i class="fa-solid fa-brain"></i> Local SHAP Feature Attribution (Why This Customer Is At Risk)
+      </div>
+      <div class="card-subtitle">
+        Red bars indicate factors accelerating churn. Green bars indicate retention stabilizers.
+      </div>
+    </div>
+  </div>
+
+  <div style="height: 300px; position: relative;">
+    <canvas id="shapWaterfallChart"></canvas>
+  </div>
+  <div style="font-size: 0.76rem; color: var(--text-dim); margin-top: 12px;">
+    {{ explanation.disclaimer }}
+  </div>
+</div>
+
+<!-- Counterfactual Scenario Simulator -->
+<div class="card-panel" style="margin-bottom: 24px;">
+  <div class="card-header-row">
+    <div>
+      <div class="card-title">
+        <i class="fa-solid fa-sliders"></i> Counterfactual Intervention Scenarios
+      </div>
+      <div class="card-subtitle">
+        Simulated impact on churn probability if specific strategic interventions are applied.
+      </div>
+    </div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px;">
+    {% for scen in counterfactuals %}
+    <div style="background: var(--bg-subtle); border: 1px solid var(--border-color); padding: 16px; border-radius: var(--radius-md);">
+      <div style="font-weight: 600; color: var(--text-primary); font-size: 0.92rem;">{{ scen.title }}</div>
+      <div style="font-size: 0.8rem; color: var(--text-muted); margin: 6px 0 10px 0;">{{ scen.description }}</div>
+      <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); padding-top: 10px;">
+        <span style="font-size: 0.8rem; color: var(--text-muted);">Projected Risk:</span>
+        <span style="font-weight: 700; color: {% if scen.scenario_prob > 50 %}var(--danger){% else %}var(--success){% endif %}; font-size: 1.05rem;">
+          {{ scen.scenario_prob }}%
+        </span>
+      </div>
+      <div style="font-size: 0.75rem; color: var(--success); text-align: right; margin-top: 4px; font-weight: 600;">
+        <i class="fa-solid fa-arrow-trend-down"></i> -{{ scen.risk_reduction_pct }}% Risk Reduction
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- Actionable Retention Playbook & Pre-Drafted Templates -->
+<div class="card-panel">
+  <div class="card-header-row">
+    <div>
+      <div class="card-title">
+        <i class="fa-solid fa-envelope-open-text"></i> Actionable Outreach Strategy
+      </div>
+      <div class="card-subtitle">Pre-drafted multi-channel engagement templates ready for dispatch.</div>
+    </div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 8px;">
+    <div>
+      <div style="font-weight: 600; font-size: 0.86rem; color: var(--text-primary); margin-bottom: 8px;">
+        <i class="fa-solid fa-envelope" style="color: var(--primary);"></i> Pre-Drafted Retention Email
+      </div>
+      <textarea class="form-control" rows="8" readonly style="font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; background: var(--bg-subtle);">{{ recommendations.email_template }}</textarea>
+    </div>
+    <div>
+      <div style="font-weight: 600; font-size: 0.86rem; color: var(--text-primary); margin-bottom: 8px;">
+        <i class="fa-solid fa-comment-sms" style="color: var(--secondary);"></i> Pre-Drafted SMS / Instant Alert
+      </div>
+      <textarea class="form-control" rows="8" readonly style="font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; background: var(--bg-subtle);">{{ recommendations.sms_template }}</textarea>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  const isDark = document.documentElement.getAttribute("data-theme") === "dark";
+  const gridColor = isDark ? "rgba(255, 255, 255, 0.07)" : "rgba(0, 0, 0, 0.05)";
+  const textColor = isDark ? "#94a3b8" : "#64748b";
+
+  // SHAP Waterfall Bar Chart
+  const impactList = {{ explanation.impact_list|tojson }};
+  const labels = impactList.map(i => i.factor);
+  const dataVals = impactList.map(i => i.impact);
+  const bgColors = impactList.map(i => i.impact > 0 ? '#ef4444' : '#10b981');
+
+  const ctxShap = document.getElementById('shapWaterfallChart').getContext('2d');
+  new Chart(ctxShap, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'SHAP Contribution Score',
+        data: dataVals,
+        backgroundColor: bgColors,
+        borderRadius: 4
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false }
+      },
+      scales: {
+        x: {
+          title: { display: true, text: 'Contribution to Churn Probability (SHAP Value)', color: textColor },
+          grid: { color: gridColor },
+          ticks: { color: textColor }
+        },
+        y: {
+          grid: { display: false },
+          ticks: { color: textColor }
+        }
+      }
+    }
+  });
+</script>
+{% endblock %}

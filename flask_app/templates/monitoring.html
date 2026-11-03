@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+
+{% block title %}Model Monitoring Center | ChurnShield AI{% endblock %}
+
+{% block header_title %}
+  <i class="fa-solid fa-satellite-dish"></i> Model Monitoring & Data Drift Center
+{% endblock %}
+
+{% block content %}
+<!-- Health Status & PSI Summary Cards -->
+<div class="kpi-grid">
+  <div class="kpi-card">
+    <div>
+      <div class="kpi-label">Model Health Score</div>
+      <div class="kpi-value" style="color: {% if drift.overall_health_score >= 80 %}var(--success){% else %}var(--warning){% endif %};">
+        {{ drift.overall_health_score }}%
+      </div>
+    </div>
+    <div class="kpi-subtext">
+      <span class="badge {{ 'badge-success' if drift.status == 'HEALTHY' else 'badge-warning' }}">
+        {{ drift.status }}
+      </span>
+    </div>
+  </div>
+
+  <div class="kpi-card">
+    <div>
+      <div class="kpi-label">Retraining Directive</div>
+      <div class="kpi-value" style="font-size: 1.25rem; color: {% if drift.retrain_recommended %}var(--danger){% else %}var(--success){% endif %};">
+        {% if drift.retrain_recommended %}RETRAIN NEEDED{% else %}SYSTEM STABLE{% endif %}
+      </div>
+    </div>
+    <div class="kpi-subtext">
+      <i class="fa-solid fa-clock-rotate-left"></i> Automated Policy Trigger
+    </div>
+  </div>
+
+  <div class="kpi-card">
+    <div>
+      <div class="kpi-label">Baseline Training Records</div>
+      <div class="kpi-value">{{ drift.baseline_samples }}</div>
+    </div>
+    <div class="kpi-subtext">
+      <i class="fa-solid fa-database" style="color: var(--primary);"></i> Reference Distribution
+    </div>
+  </div>
+
+  <div class="kpi-card">
+    <div>
+      <div class="kpi-label">Inference Samples Audited</div>
+      <div class="kpi-value">{{ drift.production_samples_evaluated }}</div>
+    </div>
+    <div class="kpi-subtext">
+      <i class="fa-solid fa-bolt" style="color: var(--success);"></i> Recent Inference Cohort
+    </div>
+  </div>
+</div>
+
+<!-- PSI & Data Drift Table -->
+<div class="card-panel" style="margin-bottom: 24px;">
+  <div class="card-header-row">
+    <div>
+      <div class="card-title">
+        <i class="fa-solid fa-chart-line"></i> Population Stability Index (PSI) & Distribution Drift
+      </div>
+      <div class="card-subtitle">
+        Monitors input feature shifts between baseline training population and current production queries.
+      </div>
+    </div>
+  </div>
+
+  <div class="table-responsive">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Feature Evaluated</th>
+          <th>PSI Score</th>
+          <th>KS Test Statistic</th>
+          <th>KS p-value</th>
+          <th>Baseline Mean</th>
+          <th>Production Mean</th>
+          <th>Stability Tier</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for d in drift.feature_drift %}
+        <tr>
+          <td><strong style="color: var(--text-primary);">{{ d.feature }}</strong></td>
+          <td><span style="font-weight: 700; color: {% if d.psi > 0.1 %}var(--warning){% else %}var(--success){% endif %};">{{ d.psi }}</span></td>
+          <td>{{ d.ks_statistic }}</td>
+          <td>{{ d.ks_pvalue }}</td>
+          <td>{{ d.baseline_mean }}</td>
+          <td>{{ d.current_mean }}</td>
+          <td>
+            <span class="badge {{ d.badge }}">{{ d.status }}</span>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div style="margin-top: 14px; padding: 10px 16px; background: var(--bg-subtle); border: 1px solid var(--border-color); border-radius: var(--radius-md); font-size: 0.82rem; color: var(--text-muted);">
+    <i class="fa-solid fa-info-circle" style="color: var(--primary); margin-right: 6px;"></i>
+    <strong>Rule Thresholds:</strong> PSI &lt; 0.10: Stable distribution; 0.10 &le; PSI &lt; 0.25: Moderate shift (Warning); PSI &ge; 0.25: Significant drift triggering automated retraining recommendations.
+  </div>
+</div>
+
+<!-- Real-Time Inference Audit Log -->
+<div class="card-panel">
+  <div class="card-header-row">
+    <div>
+      <div class="card-title">
+        <i class="fa-solid fa-list-check"></i> Real-Time Inference Audit Trail
+      </div>
+      <div class="card-subtitle">
+        Recent customer scoring transactions logged with input vectors and probability outputs.
+      </div>
+    </div>
+  </div>
+
+  <div class="table-responsive">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Log ID</th>
+          <th>Customer ID</th>
+          <th>Churn Probability</th>
+          <th>Assigned Risk</th>
+          <th>Contract</th>
+          <th>Monthly Spend</th>
+          <th>Timestamp</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if recent_inferences %}
+          {% for r in recent_inferences %}
+          <tr>
+            <td>#{{ r.id }}</td>
+            <td>
+              <a href="{{ url_for('main.customer_360_view', customer_id=r.customer_id) }}" style="font-weight: 600;">
+                {{ r.customer_id }}
+              </a>
+            </td>
+            <td>
+              <span style="font-weight: 700; color: {% if r.churn_prob > 65 %}var(--danger){% elif r.churn_prob > 35 %}var(--warning){% else %}var(--success){% endif %};">
+                {{ r.churn_prob }}%
+              </span>
+            </td>
+            <td>
+              <span class="badge {% if r.risk_level == 'HIGH' %}badge-danger{% elif r.risk_level == 'MEDIUM' %}badge-warning{% else %}badge-success{% endif %}">
+                {{ r.risk_level }}
+              </span>
+            </td>
+            <td>{{ r.contract }}</td>
+            <td>${{ r.monthly_charges }}</td>
+            <td style="font-size: 0.8rem; color: var(--text-dim);">{{ r.timestamp }}</td>
+          </tr>
+          {% endfor %}
+        {% else %}
+          <tr>
+            <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 20px;">
+              No recent inference audits recorded.
+            </td>
+          </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

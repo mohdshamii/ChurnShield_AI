@@ -1,4 +1,4 @@
-streamlit
+Flask>=2.3.0
 pandas
 numpy
 scikit-learn
@@ -7,3 +7,4 @@ joblib
 matplotlib
 seaborn
 plotly
+shap

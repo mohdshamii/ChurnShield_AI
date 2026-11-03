@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{% block title %}ChurnShield AI - Enterprise Customer Retention{% endblock %}</title>
+  <title>{% block title %}ChurnShield AI - Enterprise Customer Retention Intelligence{% endblock %}</title>
   
-  <!-- Google Fonts -->
+  <!-- Google Fonts: Inter, Outfit, JetBrains Mono -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   
   <!-- FontAwesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -22,25 +22,34 @@
 </head>
 <body>
   <div class="app-container">
-    <!-- Sidebar Navigation -->
+    <!-- Sleek Minimalist Sidebar Navigation -->
     <aside class="sidebar">
       <div class="brand-section">
         <div class="brand-icon">
-          <i class="fa-solid fa-shield-halved" style="color: #0b0f19;"></i>
+          <i class="fa-solid fa-shield-halved"></i>
         </div>
         <div class="brand-title">
           <span>ChurnShield</span>
-          <span class="brand-subtitle">AI Intelligence</span>
+          <span class="brand-subtitle">AI Retention</span>
         </div>
       </div>
 
       <ul class="nav-menu">
+        <div class="nav-category-label">Overview</div>
         <li class="nav-item {% if active_page == 'dashboard' %}active{% endif %}">
           <a href="{{ url_for('main.index') }}">
             <i class="fa-solid fa-chart-line"></i>
             <span>Executive Dashboard</span>
           </a>
         </li>
+        <li class="nav-item {% if active_page == 'analytics' %}active{% endif %}">
+          <a href="{{ url_for('main.analytics_view') }}">
+            <i class="fa-solid fa-chart-pie"></i>
+            <span>Customer Risk Analytics</span>
+          </a>
+        </li>
+
+        <div class="nav-category-label">Inference & XAI</div>
         <li class="nav-item {% if active_page == 'predict' %}active{% endif %}">
           <a href="{{ url_for('main.predict') }}">
             <i class="fa-solid fa-user-check"></i>
@@ -53,16 +62,50 @@
             <span>Batch CSV Engine</span>
           </a>
         </li>
+        <li class="nav-item {% if active_page == 'explainability' %}active{% endif %}">
+          <a href="{{ url_for('main.explainability_view') }}">
+            <i class="fa-solid fa-brain"></i>
+            <span>Explainable AI Studio</span>
+          </a>
+        </li>
+
+        <div class="nav-category-label">Machine Learning</div>
         <li class="nav-item {% if active_page == 'models' %}active{% endif %}">
           <a href="{{ url_for('main.models_view') }}">
             <i class="fa-solid fa-microchip"></i>
-            <span>ML Models & Benchmark</span>
+            <span>Model Benchmark Lab</span>
+          </a>
+        </li>
+        <li class="nav-item {% if active_page == 'automl' %}active{% endif %}">
+          <a href="{{ url_for('main.automl_view') }}">
+            <i class="fa-solid fa-gears"></i>
+            <span>AutoML Studio</span>
+          </a>
+        </li>
+        <li class="nav-item {% if active_page == 'monitoring' %}active{% endif %}">
+          <a href="{{ url_for('main.monitoring_view') }}">
+            <i class="fa-solid fa-satellite-dish"></i>
+            <span>Model Monitoring</span>
+          </a>
+        </li>
+
+        <div class="nav-category-label">Operations & Data</div>
+        <li class="nav-item {% if active_page == 'revenue' %}active{% endif %}">
+          <a href="{{ url_for('main.revenue_view') }}">
+            <i class="fa-solid fa-coins"></i>
+            <span>Revenue Intelligence</span>
           </a>
         </li>
         <li class="nav-item {% if active_page == 'retention' %}active{% endif %}">
           <a href="{{ url_for('main.retention_view') }}">
             <i class="fa-solid fa-hand-holding-dollar"></i>
-            <span>Retention & CLV ROI</span>
+            <span>Retention Campaigns</span>
+          </a>
+        </li>
+        <li class="nav-item {% if active_page == 'data_intelligence' %}active{% endif %}">
+          <a href="{{ url_for('main.data_intelligence_view') }}">
+            <i class="fa-solid fa-database"></i>
+            <span>Data Intelligence</span>
           </a>
         </li>
         <li class="nav-item {% if active_page == 'history' %}active{% endif %}">
@@ -71,39 +114,70 @@
             <span>Audit History & DB</span>
           </a>
         </li>
+
+        <div class="nav-category-label">Developer</div>
+        <li class="nav-item {% if active_page == 'api_docs' %}active{% endif %}">
+          <a href="{{ url_for('main.api_docs') }}">
+            <i class="fa-solid fa-code"></i>
+            <span>REST API Docs</span>
+          </a>
+        </li>
       </ul>
 
       <div class="sidebar-footer">
-        <p>ChurnShield AI v2.0</p>
-        <p style="color: #64748b; font-size: 0.72rem;">Academic & Major Project Edition</p>
+        <span style="font-weight: 600; color: var(--text-secondary);">ChurnShield AI Enterprise</span>
+        <span>v2.0 Production Certified</span>
       </div>
     </aside>
 
     <!-- Main View Wrapper -->
     <div class="main-wrapper">
+      <!-- Stripe-Style Sticky Topbar Header -->
       <header class="topbar">
-        <div class="page-title">
-          {% block header_title %}
-            <i class="fa-solid fa-shield-halved" style="color: var(--primary);"></i> ChurnShield AI
-          {% endblock %}
+        <div class="topbar-left">
+          <button type="button" id="mobile-menu-btn" class="mobile-menu-btn" aria-label="Toggle navigation">
+            <i class="fa-solid fa-bars"></i>
+          </button>
+          <div class="page-title">
+            {% block header_title %}
+              <i class="fa-solid fa-shield-halved"></i> ChurnShield AI
+            {% endblock %}
+          </div>
         </div>
+
         <div class="topbar-actions">
           <div class="system-badge">
             <span class="pulse-dot"></span>
             <span>ENSEMBLE ACTIVE (AUC: 0.847)</span>
           </div>
-          <a href="{{ url_for('main.predict') }}" class="btn btn-primary btn-sm">
-            <i class="fa-solid fa-bolt"></i> Instant Predict
+
+          <a href="{{ url_for('main.download_executive_report') }}" target="_blank" class="btn btn-secondary btn-sm">
+            <i class="fa-solid fa-file-pdf"></i> <span>Audit Report</span>
           </a>
+          <a href="{{ url_for('main.predict') }}" class="btn btn-primary btn-sm">
+            <i class="fa-solid fa-bolt"></i> <span>Instant Predict</span>
+          </a>
+
+          <!-- Dark / Light Theme Toggle -->
+          <button type="button" id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle dark/light mode" title="Switch Theme">
+            <i class="fa-solid fa-moon"></i>
+          </button>
+
+          <!-- User Profile Pill -->
+          <div class="user-profile-pill">
+            <div class="user-avatar">MS</div>
+            <span>Enterprise</span>
+          </div>
         </div>
       </header>
 
+      <!-- Page Content Body -->
       <main class="content-body">
         <!-- Flash messages -->
         {% with messages = get_flashed_messages(with_categories=true) %}
           {% if messages %}
             {% for category, message in messages %}
-              <div class="alert alert-{{ category }}" style="background: rgba(255, 61, 87, 0.15); border: 1px solid var(--danger); color: #fff; padding: 12px 18px; border-radius: 8px; margin-bottom: 20px;">
+              <div class="alert alert-{{ category }}" style="background: var(--bg-surface); border: 1px solid var(--border-color); border-left: 4px solid var(--primary); color: var(--text-primary); padding: 12px 18px; border-radius: var(--radius-md); margin-bottom: 20px; box-shadow: var(--shadow-card);">
                 {{ message }}
               </div>
             {% endfor %}
@@ -113,8 +187,23 @@
         {% block content %}{% endblock %}
       </main>
 
-      <footer style="text-align: center; padding: 20px; font-size: 0.8rem; color: var(--text-dim); border-top: 1px solid var(--border-subtle);">
-        ChurnShield AI • Enterprise Predictive Retention Architecture • Designed for Production & Academic Submission • Developed by Mohd Shami
+      <!-- Dynamic Website Footer -->
+      <footer class="app-footer">
+        <div class="footer-inner">
+          <div>
+            <strong>ChurnShield AI</strong> • Enterprise Customer Retention Intelligence Platform
+          </div>
+          <div class="footer-links">
+            <a href="{{ url_for('main.index') }}">Dashboard</a>
+            <a href="{{ url_for('main.analytics_view') }}">Risk Analytics</a>
+            <a href="{{ url_for('main.predict') }}">Predictor</a>
+            <a href="{{ url_for('main.models_view') }}">Model Lab</a>
+            <a href="{{ url_for('main.api_docs') }}">API Docs</a>
+          </div>
+          <div style="color: var(--text-dim); font-size: 0.78rem;">
+            Designed & Developed by Mohd Shami • Production Ready
+          </div>
+        </div>
       </footer>
     </div>
   </div>

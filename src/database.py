@@ -1,7 +1,7 @@
 """
 ChurnShield AI - SQLite Persistence & Data Repository
 Handles storage of single predictions, batch runs, customer notes,
-audit histories, and user sessions with parameterization and thread safety.
+audit histories, campaigns, experiments, and model monitoring logs.
 """
 
 import json
@@ -26,9 +26,8 @@ class DatabaseManager:
 
     def get_connection(self) -> sqlite3.Connection:
         """Returns a configured SQLite connection with row factory."""
-        conn = sqlite3.connect(self.db_path, timeout=10.0)
+        conn = sqlite3.connect(self.db_path, timeout=15.0)
         conn.row_factory = sqlite3.Row
-        # Enable Write-Ahead Logging for better concurrent read/write performance
         conn.execute("PRAGMA journal_mode=WAL;")
         return conn
 
@@ -37,18 +36,19 @@ class DatabaseManager:
         with self.get_connection() as conn:
             cur = conn.cursor()
 
-            # Users table
+            # 1. Users table
             cur.execute("""
                 CREATE TABLE IF NOT EXISTS users (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     username TEXT UNIQUE NOT NULL,
                     password TEXT NOT NULL,
+                    role TEXT DEFAULT 'Analyst',
                     email TEXT,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 );
             """)
 
-            # Predictions table (expanded with customer_id and risk_level)
+            # 2. Predictions table
             cur.execute("""
                 CREATE TABLE IF NOT EXISTS predictions (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -62,17 +62,15 @@ class DatabaseManager:
                 );
             """)
 
-            # Schema Migration Check for pre-existing predictions table
+            # Schema Migration Check for predictions table
             cur.execute("PRAGMA table_info(predictions);")
             existing_cols = [col[1] for col in cur.fetchall()]
             if "customer_id" not in existing_cols:
                 cur.execute("ALTER TABLE predictions ADD COLUMN customer_id TEXT DEFAULT 'Unknown';")
-                logger.info("Migrated predictions table: added customer_id column.")
             if "risk_level" not in existing_cols:
                 cur.execute("ALTER TABLE predictions ADD COLUMN risk_level TEXT DEFAULT 'MEDIUM';")
-                logger.info("Migrated predictions table: added risk_level column.")
 
-            # Batch history table
+            # 3. Batch history table
             cur.execute("""
                 CREATE TABLE IF NOT EXISTS batch_history (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -86,7 +84,7 @@ class DatabaseManager:
                 );
             """)
 
-            # Retention interventions table
+            # 4. Retention interventions table
             cur.execute("""
                 CREATE TABLE IF NOT EXISTS retention_interventions (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -100,6 +98,64 @@ class DatabaseManager:
                     FOREIGN KEY (prediction_id) REFERENCES predictions(id)
                 );
             """)
+
+            # 5. Marketing & Retention Campaigns table
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS campaigns (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name TEXT NOT NULL,
+                    target_risk_level TEXT NOT NULL,
+                    offer_name TEXT NOT NULL,
+                    discount_pct REAL DEFAULT 15.0,
+                    status TEXT DEFAULT 'Active',
+                    customers_targeted INTEGER DEFAULT 0,
+                    retained_count INTEGER DEFAULT 0,
+                    budget REAL DEFAULT 5000.0,
+                    revenue_saved REAL DEFAULT 0.0,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+
+            # 6. AutoML Experiments Registry
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS experiments (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    experiment_name TEXT NOT NULL,
+                    model_type TEXT NOT NULL,
+                    accuracy REAL,
+                    roc_auc REAL,
+                    f1_score REAL,
+                    recall REAL,
+                    hyperparams_json TEXT,
+                    status TEXT DEFAULT 'Completed',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+
+            # 7. Model Monitoring & Data Drift Logs
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS drift_logs (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    metric_name TEXT NOT NULL,
+                    feature_name TEXT NOT NULL,
+                    drift_value REAL NOT NULL,
+                    threshold REAL NOT NULL,
+                    status TEXT NOT NULL,
+                    details TEXT,
+                    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+
+            # Seed default campaigns if table is empty
+            cur.execute("SELECT COUNT(*) FROM campaigns;")
+            if cur.fetchone()[0] == 0:
+                cur.execute("""
+                    INSERT INTO campaigns (name, target_risk_level, offer_name, discount_pct, status, customers_targeted, retained_count, budget, revenue_saved)
+                    VALUES 
+                    ('Q4 Fiber Retention Blitz', 'HIGH', 'Free Speed Boost + 20% Off 1-Year', 20.0, 'Active', 142, 88, 7100.0, 75600.0),
+                    ('Month-to-Month Annual Upgrade', 'MEDIUM', 'One-Month Free on Annual Contract', 10.0, 'Active', 310, 195, 9300.0, 140400.0),
+                    ('Senior Loyalty Tech Support Bundle', 'HIGH', 'Free 24/7 Priority Tech Support', 15.0, 'Active', 95, 62, 3800.0, 48200.0)
+                """)
 
             conn.commit()
             logger.info("Database schema initialized and verified.")
@@ -162,6 +218,48 @@ class DatabaseManager:
                 })
             return results
 
+    def get_customer_history(self, customer_id: str) -> List[Dict[str, Any]]:
+        """Retrieves all historical evaluations for a specific customer ID."""
+        with self.get_connection() as conn:
+            cur = conn.cursor()
+            cur.execute("""
+                SELECT id, customer_id, prediction_data, churn_prob, risk_level, notes, timestamp
+                FROM predictions
+                WHERE customer_id = ?
+                ORDER BY id DESC
+            """, (customer_id,))
+            rows = cur.fetchall()
+
+            results = []
+            for r in rows:
+                try:
+                    data = json.loads(r["prediction_data"])
+                except Exception:
+                    data = {}
+                results.append({
+                    "id": r["id"],
+                    "customer_id": r["customer_id"],
+                    "churn_prob": round(float(r["churn_prob"]) * 100, 1),
+                    "risk_level": r["risk_level"],
+                    "notes": r["notes"],
+                    "timestamp": r["timestamp"],
+                    "raw_data": data
+                })
+            return results
+
+    def get_customer_360_record(self, customer_id: str) -> Optional[Dict[str, Any]]:
+        """Retrieves latest profile and summary for a customer."""
+        records = self.get_customer_history(customer_id)
+        if not records:
+            return None
+        latest = records[0]
+        return {
+            "customer_id": customer_id,
+            "latest_prediction": latest,
+            "total_evaluations": len(records),
+            "history": records
+        }
+
     def add_note_to_prediction(self, prediction_id: int, notes: str) -> bool:
         """Appends or updates a note on an existing prediction record."""
         with self.get_connection() as conn:
@@ -199,39 +297,156 @@ class DatabaseManager:
                 )
                 VALUES (?, ?, ?, ?, ?, ?, ?)
             """, (
-                filename,
-                total_records,
-                high_risk_count,
-                medium_risk_count,
-                low_risk_count,
-                float(avg_prob),
+                filename, total_records, high_risk_count,
+                medium_risk_count, low_risk_count, float(avg_prob),
                 datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             ))
             conn.commit()
             return cur.lastrowid
 
-    def get_database_stats(self) -> Dict[str, Any]:
-        """Calculates aggregate statistics over the predictions history."""
+    def get_batch_history(self, limit: int = 20) -> List[Dict[str, Any]]:
+        """Retrieves recent batch execution logs."""
         with self.get_connection() as conn:
             cur = conn.cursor()
-            cur.execute("SELECT COUNT(*), AVG(churn_prob) FROM predictions")
-            total_count, avg_prob = cur.fetchone()
-            total_count = total_count or 0
-            avg_prob = (avg_prob or 0.0) * 100.0
+            cur.execute("""
+                SELECT id, filename, total_records, high_risk_count, medium_risk_count, low_risk_count, avg_churn_prob, timestamp
+                FROM batch_history
+                ORDER BY id DESC
+                LIMIT ?
+            """, (limit,))
+            return [dict(r) for r in cur.fetchall()]
 
-            cur.execute("SELECT COUNT(*) FROM predictions WHERE risk_level = 'HIGH'")
-            high_count = cur.fetchone()[0] or 0
+    # -------------------------------------------------------------
+    # Campaigns Management
+    # -------------------------------------------------------------
+    def get_campaigns(self) -> List[Dict[str, Any]]:
+        """Retrieves all retention campaigns."""
+        with self.get_connection() as conn:
+            cur = conn.cursor()
+            cur.execute("SELECT * FROM campaigns ORDER BY id DESC")
+            return [dict(r) for r in cur.fetchall()]
 
-            cur.execute("SELECT COUNT(*) FROM predictions WHERE risk_level = 'MEDIUM'")
-            med_count = cur.fetchone()[0] or 0
+    def create_campaign(
+        self,
+        name: str,
+        target_risk_level: str,
+        offer_name: str,
+        discount_pct: float,
+        budget: float = 5000.0,
+        customers_targeted: int = 0
+    ) -> int:
+        """Creates a new retention campaign."""
+        with self.get_connection() as conn:
+            cur = conn.cursor()
+            cur.execute("""
+                INSERT INTO campaigns (name, target_risk_level, offer_name, discount_pct, budget, customers_targeted, status)
+                VALUES (?, ?, ?, ?, ?, ?, 'Active')
+            """, (name, target_risk_level, offer_name, float(discount_pct), float(budget), int(customers_targeted)))
+            conn.commit()
+            return cur.lastrowid
 
-            cur.execute("SELECT COUNT(*) FROM predictions WHERE risk_level = 'LOW'")
-            low_count = cur.fetchone()[0] or 0
+    def update_campaign_status(self, campaign_id: int, status: str) -> bool:
+        """Updates campaign execution status."""
+        with self.get_connection() as conn:
+            cur = conn.cursor()
+            cur.execute("UPDATE campaigns SET status = ? WHERE id = ?", (status, campaign_id))
+            conn.commit()
+            return cur.rowcount > 0
+
+    # -------------------------------------------------------------
+    # AutoML Experiments Registry
+    # -------------------------------------------------------------
+    def log_experiment(
+        self,
+        experiment_name: str,
+        model_type: str,
+        accuracy: float,
+        roc_auc: float,
+        f1_score: float,
+        recall: float,
+        hyperparams: Dict[str, Any]
+    ) -> int:
+        """Logs an AutoML training run into the experiments registry."""
+        with self.get_connection() as conn:
+            cur = conn.cursor()
+            cur.execute("""
+                INSERT INTO experiments (experiment_name, model_type, accuracy, roc_auc, f1_score, recall, hyperparams_json)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            """, (
+                experiment_name, model_type, float(accuracy), float(roc_auc),
+                float(f1_score), float(recall), json.dumps(hyperparams)
+            ))
+            conn.commit()
+            return cur.lastrowid
+
+    def get_experiments(self, limit: int = 25) -> List[Dict[str, Any]]:
+        """Retrieves recent experiments from registry."""
+        with self.get_connection() as conn:
+            cur = conn.cursor()
+            cur.execute("SELECT * FROM experiments ORDER BY id DESC LIMIT ?", (limit,))
+            return [dict(r) for r in cur.fetchall()]
+
+    # -------------------------------------------------------------
+    # Model Monitoring & Drift Logging
+    # -------------------------------------------------------------
+    def log_drift_check(
+        self,
+        metric_name: str,
+        feature_name: str,
+        drift_value: float,
+        threshold: float,
+        status: str,
+        details: str = ""
+    ) -> int:
+        """Logs a data drift or prediction drift check."""
+        with self.get_connection() as conn:
+            cur = conn.cursor()
+            cur.execute("""
+                INSERT INTO drift_logs (metric_name, feature_name, drift_value, threshold, status, details)
+                VALUES (?, ?, ?, ?, ?, ?)
+            """, (metric_name, feature_name, float(drift_value), float(threshold), status, details))
+            conn.commit()
+            return cur.lastrowid
+
+    def get_drift_logs(self, limit: int = 50) -> List[Dict[str, Any]]:
+        """Retrieves recent drift logs."""
+        with self.get_connection() as conn:
+            cur = conn.cursor()
+            cur.execute("SELECT * FROM drift_logs ORDER BY id DESC LIMIT ?", (limit,))
+            return [dict(r) for r in cur.fetchall()]
+
+    def get_database_stats(self) -> Dict[str, Any]:
+        """Calculates global aggregates from SQLite database."""
+        with self.get_connection() as conn:
+            cur = conn.cursor()
+            cur.execute("SELECT COUNT(*) FROM predictions;")
+            total_predictions = cur.fetchone()[0]
+
+            cur.execute("SELECT COUNT(*) FROM predictions WHERE risk_level = 'HIGH';")
+            high_risk_count = cur.fetchone()[0]
+
+            cur.execute("SELECT COUNT(*) FROM predictions WHERE risk_level = 'MEDIUM';")
+            medium_risk_count = cur.fetchone()[0]
+
+            cur.execute("SELECT COUNT(*) FROM predictions WHERE risk_level = 'LOW';")
+            low_risk_count = cur.fetchone()[0]
+
+            cur.execute("SELECT AVG(churn_prob) FROM predictions;")
+            avg_prob_row = cur.fetchone()[0]
+            avg_churn_prob = round(float(avg_prob_row) * 100, 1) if avg_prob_row is not None else 0.0
+
+            cur.execute("SELECT COUNT(*) FROM batch_history;")
+            total_batch_runs = cur.fetchone()[0]
+
+            cur.execute("SELECT COUNT(*) FROM campaigns WHERE status = 'Active';")
+            active_campaigns = cur.fetchone()[0]
 
             return {
-                "total_predictions": total_count,
-                "avg_churn_prob": round(avg_prob, 1),
-                "high_risk_count": high_count,
-                "medium_risk_count": med_count,
-                "low_risk_count": low_count
+                "total_predictions": total_predictions,
+                "high_risk_count": high_risk_count,
+                "medium_risk_count": medium_risk_count,
+                "low_risk_count": low_risk_count,
+                "avg_churn_prob": avg_churn_prob,
+                "total_batch_runs": total_batch_runs,
+                "active_campaigns": active_campaigns
             }
