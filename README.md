@@ -147,14 +147,14 @@ ChurnShield_AI/
 
 | Image | Preview |
 |---|---|
-| EDA | ![EDA](eda.png) |
-| Image | ![Image](image.png) |
-| Logistic Regression | ![Logistic Regression](logistic.png) |
-| Output 01 | ![Output 01](output01.png) |
-| Output 02 | ![Output 02](output02.png) |
-| Output 03 | ![Output 03](output03.png) |
-| Random Forest | ![Random Forest](randomforest.png) |
-| XGBoost | ![XGBoost](xgboost.png) |
+| EDA | ![EDA](img/eda.png) |
+| Image | ![Image](img/image.png) |
+| Logistic Regression | ![Logistic Regression](img/logistic.png) |
+| Output 01 | ![Output 01](img/output01.png) |
+| Output 02 | ![Output 02](img/output02.png) |
+| Output 03 | ![Output 03](img/output03.png) |
+| Random Forest | ![Random Forest](img/randomforest.png) |
+| XGBoost | ![XGBoost](img/xgboost.png) |
 
 
 ##  Quick Start Guide
